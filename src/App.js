@@ -407,7 +407,7 @@ export default function App() {
 
   return (
     <div className='flex flex-col items-center min-h-[100vh] w-[1400px]'>
-      <h1 className='flex justify-center items-center text-green text-4xl my-5'>Receipt Faker</h1>
+      <h1 className='flex justify-center items-center text-green text-4xl my-5'>Receipt Image Generator</h1>
       <BrowserRouter>
         <Tabs />
         <div className='flex justify-evenly items-start my-12 text-white w-full'>
