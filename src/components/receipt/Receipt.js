@@ -57,7 +57,7 @@ export default function Receipt(props) {
     }
 
     return (
-      <div className='w-[30rem]'>
+      <div className='flex justify-center'>
         <section id='receipt' className={`flex flex-col justify-start items-between text-black bg-white w-[25rem] px-5 pb-10 pt-5 mx-0 text-xs font-mono font-bold ${props.receiptHeightStyle}`}>
           {/*Store Name/Logo*/}
           <StoreBanner></StoreBanner>

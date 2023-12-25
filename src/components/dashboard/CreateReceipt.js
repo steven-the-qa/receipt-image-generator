@@ -7,9 +7,9 @@ function CreateReceipt(props) {
   const chooseCustomStoreStyles = props.inputData.storeBox && 'hidden'
 
   return (
-    <section className='text-xs w-[40rem]'>
-      <div className='flex'>
-        <div className='flex flex-col justify-start p-3 rounded-md border mr-5 h-full min-w-[50%]'>
+    <section className='flex flex-col items-center text-xs text-black'>
+      <div className='flex flex-col'>
+        <div className='flex flex-col items-center my-5 p-3 h-full'>
           <h2 className='text-xl mb-5'>Receipt Details</h2>
           <div id="chooseExistingStore" className='flex flex-col justify-between'>
             <label htmlFor='storeName'>Store Name</label>
@@ -32,7 +32,7 @@ function CreateReceipt(props) {
             <input type="text" id="customStoreName" name="customStoreName" className="py-3 pl-1 focus:bg-gray flex justify-start items-center rounded h-6 text-black bg-white duration-[250ms]" onChange={props.handleCustomStoreNameChange}></input>
           </div>
 
-          <button className='mt-5 justify-center items-center bg-gradient-to-l from-white to-green text-black rounded p-2 duration-[250ms]' onClick={props.allowAddressEdit}>Toggle Custom Address</button>
+          <button className='flex mt-5 items-center bg-gradient-to-l from-white to-green text-black rounded p-2 duration-[250ms]' onClick={props.allowAddressEdit}>Toggle Custom Address</button>
           {props.isRestaurant && 
             <ManualAddress 
               handleChange={props.handleChange}
@@ -42,7 +42,7 @@ function CreateReceipt(props) {
           }
         </div>
 
-        <div id='addItemAndPurchaseDateColumn' className='flex flex-col'>
+        <div id='addItemAndPurchaseDateColumn' className='flex flex-col items-center'>
           <AddItem
             handleChange={props.handleChange}
             inputData={props.inputData}
@@ -51,7 +51,7 @@ function CreateReceipt(props) {
             subItem={props.subItem}
           />
 
-          <div className='flex w-full flex-col justify-start items-start p-3 rounded-md border mr-5'>
+          <div className='flex flex-col items-start p-3'>
             <label htmlFor='purchaseDate'>Purchase Date</label>
             <br/>
             <input className='py-3 pl-1 focus:bg-gray rounded h-6 text-black bg-white duration-[250ms] flex justify-start items-center' onChange={props.handleChange} type='text' name='purchaseDate' value={props.inputData.purchaseDate} />

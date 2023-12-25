@@ -406,11 +406,11 @@ export default function App() {
   useEffect(() => missingInfoScenarios())
 
   return (
-    <div className='flex flex-col items-center min-h-[100vh] w-[1400px]'>
-      <h1 className='flex justify-center items-center text-green text-4xl my-5'>Receipt Image Generator</h1>
+    <div className='flex flex-col items-center'>
+      <h1 className='flex justify-center items-center text-green text-4xl mt-5'>Receipt Image Generator</h1>
       <BrowserRouter>
         <Tabs />
-        <div className='flex justify-evenly items-start my-12 text-white w-full'>
+        <div className='flex flex-col mt-5 text-white w-full'>
           <Receipt 
             checkCityComma={checkCityComma}
             subItem={subItem}

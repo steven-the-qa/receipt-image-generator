@@ -4,8 +4,8 @@ export default function MissingInfoChecklist(props) {
   const titleStyles = 'text-black my-1 text-lg font-bold'
   const checkboxStyles = 'focus:bg-gray mr-2 rounded h-6 text-black bg-white duration-[250ms]'
   return (
-    <div className='flex mb-5 text-sm'>
-      <div id="threeDataPoints" className='mr-5 p-3 pr-10 border'>
+    <div className='flex flex-col items-start mb-5 text-sm text-black'>
+      <div id="threeDataPoints" className='mb-5 p-3 pr-10'>
         <h3 className={titleStyles}>Primary Data Points</h3>
         <div className='flex items-center'>
           <input type="checkbox" id="storeBox" className={checkboxStyles} name="storeBox" checked={props.inputData.storeBox} onChange={props.handleChange} />
@@ -21,7 +21,7 @@ export default function MissingInfoChecklist(props) {
         </div>
       </div>
       
-      <div id="storeDataPoints" className='p-3 border pr-10'>
+      <div id="storeDataPoints" className='p-3 pr-10'>
         <h3 className={titleStyles}>Store Data Points</h3>
         <div className='flex items-center'>
           <input type="checkbox" id="storeNameBox" className={checkboxStyles} name="storeNameBox" checked={props.inputData.storeNameBox} onChange={props.handleChange} />
