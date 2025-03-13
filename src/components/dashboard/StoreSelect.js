@@ -5,24 +5,25 @@ import { groupedOptions } from '../../data/selectData'
 export default function StoreSelect(props) {
   const category = groupedOptions.find( (channel) => channel.options.find(({value}) => value === props.value))
   const placeholder = category.options.find(({value}) => value === props.value).label
+  
   const groupStyles = {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'space-between',
-    color: '#4cd137',
-    fontWeight: 'bold'
+    color: '#10b981',
+    fontWeight: 'bold',
+    padding: '8px 12px'
   };
 
   const groupBadgeStyles = {
-    backgroundColor: '#1e272e',
-    borderRadius: '2em',
-    color: '#4cd137',
+    backgroundColor: '#1e293b',
+    borderRadius: '9999px',
+    color: '#10b981',
     display: 'inline-block',
-    fontSize: 8,
+    fontSize: '0.75rem',
     fontWeight: 'normal',
-    lineHeight: '1',
-    minWidth: 1,
-    padding: '0.16666666666667em 0.5em',
+    padding: '0.25em 0.7em',
+    minWidth: '1.5rem',
     textAlign: 'center',
   };
 
@@ -34,47 +35,83 @@ export default function StoreSelect(props) {
   );
 
   const selectStyles = {
+    container: (provided) => ({
+      ...provided,
+      width: '100%',
+    }),
+    control: (provided, state) => ({
+      ...provided,
+      background: '#1e293b',
+      borderColor: state.isFocused ? '#10b981' : '#475569',
+      boxShadow: state.isFocused ? '0 0 0 1px #10b981' : 'none',
+      borderRadius: '0.375rem',
+      '&:hover': {
+        borderColor: '#10b981',
+      },
+      padding: '2px',
+      transition: 'all 150ms',
+    }),
     menu: (provided) => ({
       ...provided,
-      backgroundColor: '#1e272e',
-      width: '70%',
-      minWidth: '250px'
+      backgroundColor: '#1e293b',
+      borderRadius: '0.375rem',
+      boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
+      zIndex: 9999,
+    }),
+    menuList: (provided) => ({
+      ...provided,
+      padding: '5px',
     }),
     option: (provided, state) => ({
       ...provided,
-      color: state.isFocused 
-        ? '#1e272e'
-        : '#f5f6fa',
-      backgroundImage: state.isFocused 
-        ? 'linear-gradient(to left, #f5f6fa, #4cd137)' 
-        : '',
-      backgroundColor: state.isFocused
-        ? ''
-        : '#1e272e',
-      height: 25,
-      paddingTop: 5
+      color: state.isSelected ? 'white' : '#cbd5e1',
+      backgroundColor: state.isSelected 
+        ? '#10b981' 
+        : state.isFocused 
+          ? '#334155' 
+          : '#1e293b',
+      borderRadius: '0.25rem',
+      transition: 'background-color 150ms',
+      cursor: 'pointer',
+      ':active': {
+        backgroundColor: state.isSelected ? '#0d9488' : '#334155',
+      },
     }),
-    control: (provided) => ({
+    input: (provided) => ({
       ...provided,
-      backgroundImage: 'linear-gradient(to left, #1e272e, #4cd137)',
-      display: 'flex',
-      width: '70%',
-      minWidth: '250px',
-      border: 0,
-      boxShadow: 'none',
-      cursor: 'pointer'
-    }),
-    placeholder: (provided) => ({
-      ...provided,
-      color: '#f5f6fa'
+      color: '#e2e8f0',
     }),
     singleValue: (provided) => ({
       ...provided,
-      color: '#f5f6fa'
-    })
-  }
+      color: '#e2e8f0',
+    }),
+    placeholder: (provided) => ({
+      ...provided,
+      color: '#94a3b8',
+    }),
+    multiValue: (provided) => ({
+      ...provided,
+      backgroundColor: '#334155',
+      borderRadius: '0.25rem',
+    }),
+    multiValueLabel: (provided) => ({
+      ...provided,
+      color: '#e2e8f0',
+      fontSize: '0.875rem',
+    }),
+    multiValueRemove: (provided) => ({
+      ...provided,
+      color: '#94a3b8',
+      ':hover': {
+        backgroundColor: '#475569',
+        color: '#e2e8f0',
+      },
+    }),
+  };
+  
   return (
-    <Select id='storeSelect' 
+    <Select
+      id='storeSelect' 
       options={groupedOptions} 
       styles={selectStyles} 
       onChange={props.onChange} 
@@ -82,6 +119,16 @@ export default function StoreSelect(props) {
       value={props.value} 
       placeholder={placeholder} 
       formatGroupLabel={formatGroupLabel}
+      theme={(theme) => ({
+        ...theme,
+        colors: {
+          ...theme.colors,
+          primary: '#10b981',
+          primary75: '#10b981cc',
+          primary50: '#10b98199',
+          primary25: '#10b98133',
+        },
+      })}
     />
   )
 }

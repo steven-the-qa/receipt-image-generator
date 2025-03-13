@@ -1,10 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import * as moment from 'moment'
 import Papa from 'papaparse'
 import * as retailerInfo from './data/retailerInfo.json'
 import Receipt from './components/receipt/Receipt'
-import Tabs from './components/dashboard/Tabs'
-import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, NavLink } from 'react-router-dom'
 import CreateReceipt from './components/dashboard/CreateReceipt'
 import DataTools from './components/dashboard/DataTools'
 import EditReceipt from './components/dashboard/EditReceipt'
@@ -51,8 +50,6 @@ export default function App() {
     customStoreName: '',
   });
 
-  const receiptHeightStyle =  `min-h-${receiptLength} pb-[50px]`
-
   function handleChange(e) {
     const {name, value, type, checked} = e.target
 
@@ -90,7 +87,8 @@ export default function App() {
     setInputData(prevInputData => ({...prevInputData, purchaseDate: rightNowDate, purchaseTime: rightNowTime}))
   }
 
-  function addItems(items, emptyFirst = false) {
+  // eslint-disable-next-line no-unused-vars
+  function addItemsToReceipt(items, emptyFirst = false) {
     const newItems = emptyFirst ? [...items] : [...receiptItems, ...items];
     // Add up spacing. 35px for single items, 45px for > 1
     const newLength = items.reduce((p, c) => p + (c[2] > 1 ? 45 : 35), emptyFirst ? BASE_RECEIPT_HEIGHT : receiptLength);
@@ -175,17 +173,6 @@ export default function App() {
     setReceiptLength(receiptLength + extraLength)
   }
 
-  function notifyUserOfFormat() {
-    alert(`
-      Please be sure your CSV file follows this format:\n
-      description, price, quantity\n
-      test1, 1.00, 1\n
-      test2, 3.29, 1\n
-      test3, 2.99, 2\n
-      .....etc........
-    `)
-  }
-
   function handleCSV(event) {
     if (event.target.files && event.target.files.length > 0) {
         Papa.parse(event.target.files[0], {
@@ -267,72 +254,47 @@ export default function App() {
     }
   }
 
-  function missingInfoScenarios() {
-    // Create an array to hold missing info messages
-    const messages = [];
-
-    if (inputData.storeBox === true) {
-      const store = document.getElementById('store');
-      if (store) {
-        if (inputData.storeNameBox === false) {
-          store.style.visibility = 'hidden';
-        } else {
-          store.style.visibility = 'visible';
-        }
-      }
-
-      const address = document.getElementById('address');
-      if (address) {
-        if (inputData.storeAddressBox === false) {
-          address.style.visibility = 'hidden';
-        } else {
-          address.style.visibility = 'visible';
-        }
-      }
-
-      const phone = document.getElementById('phone');
-      if (phone) {
-        if (inputData.storePhoneBox === false) {
-          phone.style.visibility = 'hidden';
-        } else {
-          phone.style.visibility = 'visible';
-        }
-      }
+  // Make missingInfoScenarios a memoized function that only changes when related dependencies change
+  const missingInfoScenarios = useCallback(() => {
+    if (!inputData.storeBox) {
+      document.getElementById('store').classList.add('hidden')
+      document.getElementById('address').classList.add('hidden')
+      document.getElementById('phone').classList.add('hidden')
     } else {
-      const store = document.getElementById('store');
-      const address = document.getElementById('address');
-      const phone = document.getElementById('phone');
+      document.getElementById('store').classList.remove('hidden')
       
-      if (store) store.style.visibility = 'hidden';
-      if (address) address.style.visibility = 'hidden';
-      if (phone) phone.style.visibility = 'hidden';
-    }
-
-    const date = document.getElementById('date');
-    if (date) {
-      if (inputData.purchaseDateBox === true) {
-        date.style.visibility = 'visible';
+      if (inputData.storeNameBox) {
+        document.getElementById('store').classList.remove('hidden')
       } else {
-        date.style.visibility = 'hidden';
+        document.getElementById('store').classList.add('hidden')
+      }
+
+      if (inputData.storeAddressBox) {
+        document.getElementById('address').classList.remove('hidden')
+      } else {
+        document.getElementById('address').classList.add('hidden')
+      }
+
+      if (inputData.storePhoneBox) {
+        document.getElementById('phone').classList.remove('hidden')
+      } else {
+        document.getElementById('phone').classList.add('hidden')
       }
     }
 
-    const subtotal = document.getElementById('subtotal');
-    const tax = document.getElementById('tax');
-    const total = document.getElementById('total');
-    
-    if (inputData.totalSpentBox === true) {
-      if (subtotal) subtotal.style.visibility = 'visible';
-      if (tax) tax.style.visibility = 'visible';
-      if (total) total.style.visibility = 'visible';
+    if (inputData.purchaseDateBox) {
+      document.getElementById('date').classList.remove('hidden')
     } else {
-      if (subtotal) subtotal.style.visibility = 'hidden';
-      if (tax) tax.style.visibility = 'hidden';
-      if (total) total.style.visibility = 'hidden';
+      document.getElementById('date').classList.add('hidden')
     }
 
-    return messages;
-  }
+    if (inputData.totalSpentBox) {
+      document.getElementById('subtotal').parentElement.parentElement.classList.remove('hidden')
+    } else {
+      document.getElementById('subtotal').parentElement.parentElement.classList.add('hidden')
+    }
+  }, [inputData.storeBox, inputData.storeNameBox, inputData.storeAddressBox, inputData.storePhoneBox, 
+      inputData.purchaseDateBox, inputData.totalSpentBox]);
 
   function toggleTypeface() {
     const elem = document.getElementById('receipt');
@@ -420,7 +382,16 @@ export default function App() {
       }
   }, [blurryReceipt]);
 
-  useEffect(() => calculateTotal(), [receiptItems]);
+  useEffect(() => {
+    let total = 0
+    for (let i = 0; i < receiptItems.length; i++) {
+      if (receiptItems[i][1] && receiptItems[i][2]) {
+        total += (receiptItems[i][2] * receiptItems[i][1])
+      }
+    }
+    setSubtotal(Math.ceil(total * 100)/100)
+    setTotal(prevSubtotal => (prevSubtotal * tax) + prevSubtotal)
+  }, [receiptItems, tax]);
 
   useEffect(() => inputData.address2 ? setReceiptLength(375) : setReceiptLength(BASE_RECEIPT_HEIGHT), [inputData.address2]);
   
@@ -430,162 +401,250 @@ export default function App() {
     if (receipt) {
       missingInfoScenarios();
     }
-  }, [inputData.storeBox, inputData.storeNameBox, inputData.storeAddressBox, inputData.storePhoneBox, 
-      inputData.purchaseDateBox, inputData.totalSpentBox]);
+  }, [missingInfoScenarios]);
 
   return (
     <BrowserRouter>
-    <main className="min-h-screen bg-black">
-      <Routes>
-        <Route path="/" element={
-          <div className="flex flex-col xl:flex-row">
-            <div className="flex min-h-screen flex-col items-center xl:w-1/2 xl:mr-10 bg-dark-gray">
-              <div className="flex-1 w-full m-0 xl:m-5">
-                <Tabs />
-                <div id="tab-content" className='container mx-auto p-0'>
-                  {/* Home Route Content */}
-                  <CreateReceipt
-                    handleChange={handleChange}
-                    handleSelect={handleSelect}
-                    handleCustomStoreNameChange={handleCustomStoreNameChange}
-                    isRestaurant={restaurant}
-                    inputData={inputData}
-                    updateItems={updateItems}
-                    clearItems={clearItems}
-                    refreshDate={refreshDate}
-                    allowAddressEdit={allowAddressEdit}
-                    clearAddress={clearAddress}
-                    handleCustomStoreToggle={handleCustomStoreToggle}
-                    subItem={subItem}
-                  />
-                  <div className="flex flex-col items-center container mx-auto mt-10" id="checklistItems">
-                    {missingInfoScenarios && missingInfoScenarios().length > 0 && (
-                      <>
-                        <hr className="w-11/12 container mx-auto" />
-                        {missingInfoScenarios().map((scenario, i) => (
-                          <p className="text-white" key={i}>{scenario}</p>
-                        ))}
-                      </>
-                    )}
+      <main className="flex h-screen bg-slate-900 text-white overflow-hidden">
+        {/* Left Sidebar - Navigation */}
+        <aside className="w-64 bg-slate-800 border-r border-slate-700 flex flex-col">
+          <div className="p-4 border-b border-slate-700">
+            <h1 className="text-xl font-bold text-emerald-400">Receipt Generator</h1>
+            <p className="text-xs text-slate-400 mt-1">Create customized receipt images</p>
+          </div>
+          
+          <nav className="flex-1 p-4">
+            <ul className="space-y-2">
+              <li>
+                <NavLink 
+                  to="/" 
+                  className={({isActive}) => 
+                    `flex items-center p-3 rounded-lg transition-colors ${
+                      isActive 
+                        ? 'bg-emerald-600 text-white' 
+                        : 'text-slate-300 hover:bg-slate-700'
+                    }`
+                  }
+                >
+                  <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+                  </svg>
+                  Create Receipt
+                </NavLink>
+              </li>
+              <li>
+                <NavLink 
+                  to="/edit-receipt" 
+                  className={({isActive}) => 
+                    `flex items-center p-3 rounded-lg transition-colors ${
+                      isActive 
+                        ? 'bg-emerald-600 text-white' 
+                        : 'text-slate-300 hover:bg-slate-700'
+                    }`
+                  }
+                >
+                  <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                  </svg>
+                  Format Receipt
+                </NavLink>
+              </li>
+              <li>
+                <NavLink 
+                  to="/data-tools" 
+                  className={({isActive}) => 
+                    `flex items-center p-3 rounded-lg transition-colors ${
+                      isActive 
+                        ? 'bg-emerald-600 text-white' 
+                        : 'text-slate-300 hover:bg-slate-700'
+                    }`
+                  }
+                >
+                  <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4"></path>
+                  </svg>
+                  Data Import
+                </NavLink>
+              </li>
+            </ul>
+          </nav>
+
+          <div className="p-4 border-t border-slate-700">
+            <button 
+              onClick={toggleTypeface}
+              className="w-full flex items-center justify-center p-2 bg-slate-700 rounded-lg hover:bg-slate-600 transition-colors"
+            >
+              <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16m-7 6h7"></path>
+              </svg>
+              Toggle Font
+            </button>
+          </div>
+        </aside>
+
+        {/* Main Content Area */}
+        <div className="flex-1 flex flex-col">
+          <Routes>
+            <Route path="/" element={
+              <div className="flex-1 flex flex-col-reverse lg:flex-row overflow-hidden">
+                {/* Forms Column */}
+                <div className="lg:w-3/5 bg-slate-800 overflow-y-auto">
+                  <div className="p-6">
+                    <h2 className="text-2xl font-bold text-emerald-400 mb-6">Create Your Receipt</h2>
+                    <CreateReceipt
+                      handleChange={handleChange}
+                      handleSelect={handleSelect}
+                      handleCustomStoreNameChange={handleCustomStoreNameChange}
+                      isRestaurant={restaurant}
+                      inputData={inputData}
+                      updateItems={updateItems}
+                      clearItems={clearItems}
+                      refreshDate={refreshDate}
+                      allowAddressEdit={allowAddressEdit}
+                      clearAddress={clearAddress}
+                      handleCustomStoreToggle={handleCustomStoreToggle}
+                      subItem={subItem}
+                    />
                   </div>
-                  <hr className="w-11/12 container mx-auto my-5" />
                 </div>
-                <button id="restock" className='justify-center items-center bg-gradient-to-l from-black to-green text-white rounded p-1 m-1 duration-250 flex' onClick={toggleTypeface}>Toggle Typeface</button>
-              </div>
-            </div>
-            <div className="flex-none min-h-screen flex flex-col items-center overflow-x-hidden bg-black">
-              <Receipt
-                storeData={storeData}
-                storeName={inputData.storeName}
-                purchaseDate={inputData.purchaseDate}
-                purchaseTime={inputData.purchaseTime}
-                receiptItems={receiptItems}
-                tax={tax}
-                subtotal={subtotal}
-                total={total}
-                europeanFormat={europeanFormat}
-                blurryReceipt={blurryReceipt}
-                suppressDollarSign={suppressDollarSign}
-                checkCityComma={checkCityComma}
-                receiptHeightStyle={`min-h-[${receiptLength}px]`}
-                inputData={inputData}
-                isRestaurant={restaurant}
-                removeItemHandler={removeItem}
-                customStore={customStore}
-              />
-            </div>
-          </div>
-        } />
 
-        <Route path="/edit-receipt" element={
-          <div className="flex flex-col xl:flex-row">
-            <div className="flex min-h-screen flex-col items-center xl:w-1/2 xl:mr-10 bg-dark-gray">
-              <div className="flex-1 w-full m-0 xl:m-5">
-                <Tabs />
-                <div id="tab-content" className='container mx-auto p-0'>
-                  {/* Edit Receipt Route Content */}
-                  <EditReceipt
-                    key={`${europeanFormat}${blurryReceipt}${suppressDollarSign}`}
-                    handleFormat={handleFormat}
-                    handleDollarSign={handleDollarSign}
-                    handleBlur={handleBlur}
-                    europeanFormat={europeanFormat}
-                    blurryReceipt={blurryReceipt}
-                    suppressDollarSign={suppressDollarSign}
-                    handleChange={handleChange}
-                    inputData={inputData}
-                    toggleTypeface={toggleTypeface}
-                    missingInfoScenarios={missingInfoScenarios}
-                  />
+                {/* Preview Column */}
+                <div className="lg:w-2/5 bg-slate-900 flex flex-col items-center">
+                  <div className="w-full p-4 bg-slate-800 border-b border-slate-700">
+                    <h3 className="text-lg font-semibold text-emerald-400">Receipt Preview</h3>
+                    <p className="text-xs text-slate-400">Live preview of your generated receipt</p>
+                  </div>
+                  <div className="flex-1 w-full flex items-center justify-center p-4 overflow-y-auto">
+                    <div className="transform scale-90 md:scale-100 transition-transform shadow-2xl">
+                      <Receipt
+                        storeData={storeData}
+                        storeName={inputData.storeName}
+                        purchaseDate={inputData.purchaseDate}
+                        purchaseTime={inputData.purchaseTime}
+                        receiptItems={receiptItems}
+                        tax={tax}
+                        subtotal={subtotal}
+                        total={total}
+                        europeanFormat={europeanFormat}
+                        blurryReceipt={blurryReceipt}
+                        suppressDollarSign={suppressDollarSign}
+                        checkCityComma={checkCityComma}
+                        receiptHeightStyle={`min-h-[${receiptLength}px]`}
+                        inputData={inputData}
+                        isRestaurant={restaurant}
+                        removeItemHandler={removeItem}
+                        customStore={customStore}
+                      />
+                    </div>
+                  </div>
                 </div>
-                <button id="restock" className='justify-center items-center bg-gradient-to-l from-black to-green text-white rounded p-1 m-1 duration-250 flex' onClick={toggleTypeface}>Toggle Typeface</button>
               </div>
-            </div>
-            <div className="flex-none min-h-screen flex flex-col items-center overflow-x-hidden bg-black">
-              <Receipt
-                storeData={storeData}
-                storeName={inputData.storeName}
-                purchaseDate={inputData.purchaseDate}
-                purchaseTime={inputData.purchaseTime}
-                receiptItems={receiptItems}
-                tax={tax}
-                subtotal={subtotal}
-                total={total}
-                europeanFormat={europeanFormat}
-                blurryReceipt={blurryReceipt}
-                suppressDollarSign={suppressDollarSign}
-                checkCityComma={checkCityComma}
-                receiptHeightStyle={`min-h-[${receiptLength}px]`}
-                inputData={inputData}
-                isRestaurant={restaurant}
-                removeItemHandler={removeItem}
-                customStore={customStore}
-              />
-            </div>
-          </div>
-        } />
+            } />
 
-        <Route path="/data-tools" element={
-          <div className="flex flex-col xl:flex-row">
-            <div className="flex min-h-screen flex-col items-center xl:w-1/2 xl:mr-10 bg-dark-gray">
-              <div className="flex-1 w-full m-0 xl:m-5">
-                <Tabs />
-                <div id="tab-content" className='container mx-auto p-0'>
-                  {/* Data Tools Route Content */}
-                  <DataTools
-                    handleCSV={handleCSV}
-                    csvFile={csvFile}
-                    regenerateCSVData={regenerateCSVData}
-                  />
+            <Route path="/edit-receipt" element={
+              <div className="flex-1 flex flex-col-reverse lg:flex-row overflow-hidden">
+                {/* Forms Column */}
+                <div className="lg:w-3/5 bg-slate-800 overflow-y-auto">
+                  <div className="p-6">
+                    <h2 className="text-2xl font-bold text-emerald-400 mb-6">Format Receipt</h2>
+                    <EditReceipt
+                      key={`${europeanFormat}${blurryReceipt}${suppressDollarSign}`}
+                      handleFormat={handleFormat}
+                      handleDollarSign={handleDollarSign}
+                      handleBlur={handleBlur}
+                      europeanFormat={europeanFormat}
+                      blurryReceipt={blurryReceipt}
+                      suppressDollarSign={suppressDollarSign}
+                      handleChange={handleChange}
+                      inputData={inputData}
+                      toggleTypeface={toggleTypeface}
+                      missingInfoScenarios={missingInfoScenarios}
+                    />
+                  </div>
                 </div>
-                <button id="restock" className='justify-center items-center bg-gradient-to-l from-black to-green text-white rounded p-1 m-1 duration-250 flex' onClick={toggleTypeface}>Toggle Typeface</button>
+
+                {/* Preview Column */}
+                <div className="lg:w-2/5 bg-slate-900 flex flex-col items-center">
+                  <div className="w-full p-4 bg-slate-800 border-b border-slate-700">
+                    <h3 className="text-lg font-semibold text-emerald-400">Receipt Preview</h3>
+                    <p className="text-xs text-slate-400">Live preview of your generated receipt</p>
+                  </div>
+                  <div className="flex-1 w-full flex items-center justify-center p-4 overflow-y-auto">
+                    <div className="transform scale-90 md:scale-100 transition-transform shadow-2xl">
+                      <Receipt
+                        storeData={storeData}
+                        storeName={inputData.storeName}
+                        purchaseDate={inputData.purchaseDate}
+                        purchaseTime={inputData.purchaseTime}
+                        receiptItems={receiptItems}
+                        tax={tax}
+                        subtotal={subtotal}
+                        total={total}
+                        europeanFormat={europeanFormat}
+                        blurryReceipt={blurryReceipt}
+                        suppressDollarSign={suppressDollarSign}
+                        checkCityComma={checkCityComma}
+                        receiptHeightStyle={`min-h-[${receiptLength}px]`}
+                        inputData={inputData}
+                        isRestaurant={restaurant}
+                        removeItemHandler={removeItem}
+                        customStore={customStore}
+                      />
+                    </div>
+                  </div>
+                </div>
               </div>
-            </div>
-            <div className="flex-none min-h-screen flex flex-col items-center overflow-x-hidden bg-black">
-              <Receipt
-                storeData={storeData}
-                storeName={inputData.storeName}
-                purchaseDate={inputData.purchaseDate}
-                purchaseTime={inputData.purchaseTime}
-                receiptItems={receiptItems}
-                tax={tax}
-                subtotal={subtotal}
-                total={total}
-                europeanFormat={europeanFormat}
-                blurryReceipt={blurryReceipt}
-                suppressDollarSign={suppressDollarSign}
-                checkCityComma={checkCityComma}
-                receiptHeightStyle={`min-h-[${receiptLength}px]`}
-                inputData={inputData}
-                isRestaurant={restaurant}
-                removeItemHandler={removeItem}
-                customStore={customStore}
-              />
-            </div>
-          </div>
-        } />
-      </Routes>
-    </main>
+            } />
+
+            <Route path="/data-tools" element={
+              <div className="flex-1 flex flex-col-reverse lg:flex-row overflow-hidden">
+                {/* Forms Column */}
+                <div className="lg:w-3/5 bg-slate-800 overflow-y-auto">
+                  <div className="p-6">
+                    <h2 className="text-2xl font-bold text-emerald-400 mb-6">Data Import</h2>
+                    <DataTools
+                      handleCSV={handleCSV}
+                      csvFile={csvFile}
+                      regenerateCSVData={regenerateCSVData}
+                    />
+                  </div>
+                </div>
+
+                {/* Preview Column */}
+                <div className="lg:w-2/5 bg-slate-900 flex flex-col items-center">
+                  <div className="w-full p-4 bg-slate-800 border-b border-slate-700">
+                    <h3 className="text-lg font-semibold text-emerald-400">Receipt Preview</h3>
+                    <p className="text-xs text-slate-400">Live preview of your generated receipt</p>
+                  </div>
+                  <div className="flex-1 w-full flex items-center justify-center p-4 overflow-y-auto">
+                    <div className="transform scale-90 md:scale-100 transition-transform shadow-2xl">
+                      <Receipt
+                        storeData={storeData}
+                        storeName={inputData.storeName}
+                        purchaseDate={inputData.purchaseDate}
+                        purchaseTime={inputData.purchaseTime}
+                        receiptItems={receiptItems}
+                        tax={tax}
+                        subtotal={subtotal}
+                        total={total}
+                        europeanFormat={europeanFormat}
+                        blurryReceipt={blurryReceipt}
+                        suppressDollarSign={suppressDollarSign}
+                        checkCityComma={checkCityComma}
+                        receiptHeightStyle={`min-h-[${receiptLength}px]`}
+                        inputData={inputData}
+                        isRestaurant={restaurant}
+                        removeItemHandler={removeItem}
+                        customStore={customStore}
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            } />
+          </Routes>
+        </div>
+      </main>
     </BrowserRouter>
   );
 }

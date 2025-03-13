@@ -5,41 +5,87 @@ export default function MissingInfoChecklist(props) {
     return null;
   }
 
-  const titleStyles = 'text-green my-2 text-lg font-bold'
-  const checkboxStyles = 'focus:bg-gray mr-2 rounded h-6 text-black bg-white duration-[250ms]'
-  const labelStyles = 'text-white'
-  
   return (
-    <div className='flex flex-col items-start mb-5 text-sm'>
-      <div id="threeDataPoints" className='mb-5 p-3 pr-10'>
-        <h3 className={titleStyles}>Primary Data Points</h3>
-        <div className='flex items-center my-1'>
-          <input type="checkbox" id="storeBox" className={checkboxStyles} name="storeBox" checked={props.inputData.storeBox} onChange={props.handleChange} />
-          <label htmlFor="storeBox" className={labelStyles}>Store (name, address, phone)</label>
-        </div>
-        <div className='flex items-center my-1'>
-          <input type="checkbox" id="purchaseDateBox" className={checkboxStyles} name="purchaseDateBox" checked={props.inputData.purchaseDateBox} onChange={props.handleChange} />
-          <label htmlFor="purchaseDateBox" className={labelStyles}>Purchase Date</label>
-        </div>
-        <div className='flex items-center my-1'>
-          <input type="checkbox" id="totalSpentBox" className={checkboxStyles} name="totalSpentBox" checked={props.inputData.totalSpentBox} onChange={props.handleChange} />
-          <label htmlFor="totalSpentBox" className={labelStyles}>Total Spent</label>
+    <div className="space-y-6">
+      <div className="space-y-3">
+        <h4 className="text-sm font-medium text-emerald-400 mb-2">Primary Elements</h4>
+        <div className="space-y-2">
+          <div className="flex items-center">
+            <input 
+              type="checkbox" 
+              id="storeBox" 
+              className="h-4 w-4 rounded text-emerald-500 focus:ring-emerald-400 bg-slate-800 border-slate-600" 
+              name="storeBox" 
+              checked={props.inputData.storeBox} 
+              onChange={props.handleChange} 
+            />
+            <label htmlFor="storeBox" className="text-sm text-slate-300 ml-2">Store Details (name, address, phone)</label>
+          </div>
+          
+          <div className="flex items-center">
+            <input 
+              type="checkbox" 
+              id="purchaseDateBox" 
+              className="h-4 w-4 rounded text-emerald-500 focus:ring-emerald-400 bg-slate-800 border-slate-600" 
+              name="purchaseDateBox" 
+              checked={props.inputData.purchaseDateBox} 
+              onChange={props.handleChange} 
+            />
+            <label htmlFor="purchaseDateBox" className="text-sm text-slate-300 ml-2">Purchase Date & Time</label>
+          </div>
+          
+          <div className="flex items-center">
+            <input 
+              type="checkbox" 
+              id="totalSpentBox" 
+              className="h-4 w-4 rounded text-emerald-500 focus:ring-emerald-400 bg-slate-800 border-slate-600" 
+              name="totalSpentBox" 
+              checked={props.inputData.totalSpentBox} 
+              onChange={props.handleChange} 
+            />
+            <label htmlFor="totalSpentBox" className="text-sm text-slate-300 ml-2">Total Price Details</label>
+          </div>
         </div>
       </div>
       
-      <div id="storeDataPoints" className='p-3 pr-10'>
-        <h3 className={titleStyles}>Store Data Points</h3>
-        <div className='flex items-center my-1'>
-          <input type="checkbox" id="storeNameBox" className={checkboxStyles} name="storeNameBox" checked={props.inputData.storeNameBox} onChange={props.handleChange} />
-          <label htmlFor="storeNameBox" className={labelStyles}>Logo/Name</label>
-        </div>
-        <div className='flex items-center my-1'>
-          <input type="checkbox" id="storeAddressBox" className={checkboxStyles} name="storeAddressBox" checked={props.inputData.storeAddressBox} onChange={props.handleChange} />
-          <label htmlFor="storeAddressBox" className={labelStyles}>Street Address</label>
-        </div>
-        <div className='flex items-center my-1'>
-          <input type="checkbox" id="storePhoneBox" className={checkboxStyles} name="storePhoneBox" checked={props.inputData.storePhoneBox} onChange={props.handleChange} />
-          <label htmlFor="storePhoneBox" className={labelStyles}>Phone Number</label>
+      <div className="space-y-3">
+        <h4 className="text-sm font-medium text-emerald-400 mb-2">Store Information</h4>
+        <div className="space-y-2">
+          <div className="flex items-center">
+            <input 
+              type="checkbox" 
+              id="storeNameBox" 
+              className="h-4 w-4 rounded text-emerald-500 focus:ring-emerald-400 bg-slate-800 border-slate-600" 
+              name="storeNameBox" 
+              checked={props.inputData.storeNameBox} 
+              onChange={props.handleChange} 
+            />
+            <label htmlFor="storeNameBox" className="text-sm text-slate-300 ml-2">Store Logo/Name</label>
+          </div>
+          
+          <div className="flex items-center">
+            <input 
+              type="checkbox" 
+              id="storeAddressBox" 
+              className="h-4 w-4 rounded text-emerald-500 focus:ring-emerald-400 bg-slate-800 border-slate-600" 
+              name="storeAddressBox" 
+              checked={props.inputData.storeAddressBox} 
+              onChange={props.handleChange} 
+            />
+            <label htmlFor="storeAddressBox" className="text-sm text-slate-300 ml-2">Store Address</label>
+          </div>
+          
+          <div className="flex items-center">
+            <input 
+              type="checkbox" 
+              id="storePhoneBox" 
+              className="h-4 w-4 rounded text-emerald-500 focus:ring-emerald-400 bg-slate-800 border-slate-600" 
+              name="storePhoneBox" 
+              checked={props.inputData.storePhoneBox} 
+              onChange={props.handleChange} 
+            />
+            <label htmlFor="storePhoneBox" className="text-sm text-slate-300 ml-2">Store Phone Number</label>
+          </div>
         </div>
       </div>
     </div>
