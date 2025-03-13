@@ -1,7 +1,9 @@
+import { resolveAssetPath } from '../utils/pathResolver';
+
 // A centralized registry mapping store keys to their image data and display information
 export const storeImageRegistry = {
   "7eleven": {
-    imagePath: "/images/stores/7eleven.png",
+    imagePath: resolveAssetPath("images/stores/7eleven.png"),
     displayName: "7-Eleven",
     fallbackColor: "#00b350" // Brand green color
   },
@@ -141,7 +143,7 @@ export const storeImageRegistry = {
     fallbackColor: "#d40000" // Red color
   },
   "dollartree": {
-    imagePath: "/images/stores/dollartree.png",
+    imagePath: resolveAssetPath("images/stores/dollartree.png"),
     displayName: "Dollar Tree",
     fallbackColor: "#65A637" // Dollar Tree's green color
   }

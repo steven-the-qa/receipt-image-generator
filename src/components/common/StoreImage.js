@@ -19,6 +19,8 @@ const StoreImage = ({
 }) => {
   const [imageLoaded, setImageLoaded] = useState(false);
   const [imageError, setImageError] = useState(false);
+  const [imageSrc, setImageSrc] = useState("");
+  const [debugInfo, setDebugInfo] = useState(null);
   
   // Get store data from registry
   const storeData = getStoreImageData(storeName);
@@ -34,32 +36,47 @@ const StoreImage = ({
   useEffect(() => {
     if (!storeData) return;
     
-    // Try with both absolute and relative paths
-    const img = new Image();
-    img.src = storeData.imagePath; // Try absolute path first
+    // Try multiple path variations
+    const pathsToTry = [
+      storeData.imagePath,                             // Standard path from registry
+      `/${storeData.imagePath}`,                       // Add leading slash
+      `${window.location.origin}/${storeData.imagePath}`, // Absolute URL
+      `images/stores/${storeName}.png`,                // Relative to current path
+      `/images/stores/${storeName}.png`                // Absolute from domain root
+    ];
     
-    img.onload = () => setImageLoaded(true);
-    img.onerror = () => {
-      // If absolute path fails, try relative path
-      const relativeImg = new Image();
-      const relativePath = storeData.imagePath.startsWith('/') 
-        ? storeData.imagePath.substring(1) 
-        : storeData.imagePath;
+    // Function to try the next path
+    const tryNextPath = (pathIndex) => {
+      if (pathIndex >= pathsToTry.length) {
+        setImageError(true);
+        return;
+      }
       
-      relativeImg.src = relativePath;
-      relativeImg.onload = () => {
+      const img = new Image();
+      img.src = pathsToTry[pathIndex];
+      
+      img.onload = () => {
+        // This path worked! Update the component state
+        setImageSrc(pathsToTry[pathIndex]);
         setImageLoaded(true);
-        // Update the src we'll use for the visible image
-        storeData.imagePath = relativePath;
       };
-      relativeImg.onerror = () => setImageError(true);
+      
+      img.onerror = () => {
+        // Try the next path
+        tryNextPath(pathIndex + 1);
+      };
     };
     
-    return () => {
-      img.onload = null;
-      img.onerror = null;
-    };
-  }, [storeData]);
+    // Start trying paths
+    tryNextPath(0);
+    
+    if (process.env.NODE_ENV !== 'production') {
+      console.log(`[StoreImage] Trying to load: ${storeName}`);
+      console.log(`[StoreImage] Paths to try:`, pathsToTry);
+    }
+    
+    // No cleanup needed for the recursive function
+  }, [storeData, storeName]);
   
   if (!storeData) return null;
   
@@ -67,7 +84,7 @@ const StoreImage = ({
     <div className={`store-image-container flex flex-col items-center justify-center ${className}`}>
       {!imageError && (
         <img
-          src={storeData.imagePath}
+          src={imageSrc}
           alt={`${storeData.displayName} logo`}
           className={`object-contain max-w-full ${sizes[size]} transition-opacity duration-300 ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}
           onLoad={() => setImageLoaded(true)}
@@ -84,6 +101,12 @@ const StoreImage = ({
           <h3 className={`text-center font-bold ${size === 'small' ? 'text-md' : 'text-xl'} tracking-tight`}>
             {storeData.displayName}
           </h3>
+        </div>
+      )}
+      
+      {process.env.NODE_ENV !== 'production' && debugInfo && (
+        <div className="text-xs text-gray-400 mt-1">
+          Debug: {debugInfo}
         </div>
       )}
     </div>
