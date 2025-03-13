@@ -4,6 +4,19 @@
   <meta charset="utf-8">
   <title>Page Not Found</title>
   <script>
+    // Add diagnostic function for image testing
+    window.checkImage = function(path) {
+      const img = new Image();
+      img.onload = () => console.log(`Image exists: ${path}`);
+      img.onerror = () => console.log(`Image missing: ${path}`);
+      img.src = path;
+    };
+    
+    // Test an example image - this helps verify if images exist in the deployed build
+    setTimeout(() => {
+      checkImage('/receipt-image-generator/images/stores/walmart.png');
+    }, 1000);
+    
     // Redirect all 404s back to the main app with the path preserved
     // This is needed for GitHub Pages to work with React Router
     const path = window.location.pathname;
