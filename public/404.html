@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Page Not Found</title>
+  <script>
+    // Redirect all 404s back to the main app with the path preserved
+    // This is needed for GitHub Pages to work with React Router
+    const path = window.location.pathname;
+    
+    // Check if we're already in the receipt-image-generator path
+    const redirectPath = path.includes('/receipt-image-generator/') 
+      ? path 
+      : '/receipt-image-generator' + path;
+      
+    // Redirect to the main app with the current path in the query string
+    window.location.replace(
+      window.location.origin + '/receipt-image-generator' + 
+      '?redirectFrom=' + encodeURIComponent(path)
+    );
+  </script>
+</head>
+<body>
+  <h1>Redirecting...</h1>
+  <p>If you are not redirected automatically, please click 
+    <a href="https://steven-the-qa.github.io/receipt-image-generator/">here</a>.
+  </p>
+</body>
+</html> 

@@ -1,5 +1,5 @@
 {
-  "homepage": "https://boutchersj.github.io/receipt-image-generator",
+  "homepage": ".",
   "name": "receipt_image_generator",
   "version": "1.0.0",
   "author": "Steven Boutcher",
@@ -17,7 +17,7 @@
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
-    "predeploy": "npm run build",
+    "predeploy": "REACT_APP_DEPLOY=true npm run build",
     "deploy": "gh-pages -d build"
   },
   "eslintConfig": {
