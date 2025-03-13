@@ -7,12 +7,12 @@ function CreateReceipt(props) {
   const chooseCustomStoreStyles = props.inputData.storeBox && 'hidden'
 
   return (
-    <section className='flex flex-col items-center text-xs text-black'>
+    <section className='flex flex-col items-center text-xs text-white'>
       <div className='flex flex-col'>
         <div className='flex flex-col items-center my-5 p-3 h-full'>
-          <h2 className='text-xl mb-5'>Receipt Details</h2>
+          <h2 className='text-xl mb-5 text-green'>Receipt Details</h2>
           <div id="chooseExistingStore" className='flex flex-col justify-between'>
-            <label htmlFor='storeName'>Store Name</label>
+            <label htmlFor='storeName' className='text-white mb-2'>Store Name</label>
             <StoreSelect
               id='storeSelect'
               onChange={props.handleSelect}
@@ -21,18 +21,24 @@ function CreateReceipt(props) {
             />
           </div>
 
-          <div id="customStoreCheckboxContainer">
+          <div id="customStoreCheckboxContainer" className='mt-4 mb-2'>
             <input id="useCustomStoreName" name="useCustomStoreName" type="checkbox" onChange={props.handleCustomStoreToggle} className="mb-1 focus:bg-gray align-middle rounded h-6 text-black bg-white duration-[250ms] mr-1" />
-            <label htmlFor="useCustomStoreName">Custom store?</label>
+            <label htmlFor="useCustomStoreName" className='text-white'>Custom store?</label>
           </div>
 
-          <div id="chooseCustomStore" className={`${chooseCustomStoreStyles} flex flex-col`}>
-            <label htmlFor='customStoreName'>Store Name</label>
-            <br />
-            <input type="text" id="customStoreName" name="customStoreName" className="py-3 pl-1 focus:bg-gray flex justify-start items-center rounded h-6 text-black bg-white duration-[250ms]" onChange={props.handleCustomStoreNameChange}></input>
+          <div id="chooseCustomStore" className={`${chooseCustomStoreStyles} flex flex-col w-full items-center`}>
+            <label htmlFor='customStoreName' className='text-white mb-2'>Store Name</label>
+            <input 
+              type="text" 
+              id="customStoreName" 
+              name="customStoreName" 
+              className="py-3 pl-2 w-[70%] min-w-[250px] focus:bg-gray flex justify-start items-center rounded h-6 text-black bg-white duration-[250ms]" 
+              onChange={props.handleCustomStoreNameChange}
+              placeholder="Enter custom store name"
+            />
           </div>
 
-          <button className='flex mt-5 items-center bg-gradient-to-l from-white to-green text-black rounded p-2 duration-[250ms]' onClick={props.allowAddressEdit}>Toggle Custom Address</button>
+          <button className='flex mt-5 items-center bg-gradient-to-l from-black to-green text-white rounded p-2 duration-[250ms] hover:from-dark-gray hover:to-dark-green' onClick={props.allowAddressEdit}>Toggle Custom Address</button>
           {props.isRestaurant && 
             <ManualAddress 
               handleChange={props.handleChange}
@@ -52,14 +58,14 @@ function CreateReceipt(props) {
           />
 
           <div className='flex flex-col items-start p-3'>
-            <label htmlFor='purchaseDate'>Purchase Date</label>
+            <label htmlFor='purchaseDate' className='text-white'>Purchase Date</label>
             <br/>
-            <input className='py-3 pl-1 focus:bg-gray rounded h-6 text-black bg-white duration-[250ms] flex justify-start items-center' onChange={props.handleChange} type='text' name='purchaseDate' value={props.inputData.purchaseDate} />
+            <input className='py-3 pl-2 focus:bg-gray rounded h-6 text-black bg-white duration-[250ms] flex justify-start items-center' onChange={props.handleChange} type='text' name='purchaseDate' value={props.inputData.purchaseDate} />
             <br/>
-            <label htmlFor='purchaseTime'>Purchase Time</label>
+            <label htmlFor='purchaseTime' className='text-white'>Purchase Time</label>
             <br/>
-            <input className='py-3 pl-1 focus:bg-gray rounded h-6 text-black bg-white duration-[250ms] flex justify-start items-center' onChange={props.handleChange} type='text' name='purchaseTime' value={props.inputData.purchaseTime} />
-            <button className='justify-center items-center bg-gradient-to-l from-white to-green text-black rounded p-3 duration-[250ms] mt-5' onClick={props.refreshDate}>Refresh Date</button>
+            <input className='py-3 pl-2 focus:bg-gray rounded h-6 text-black bg-white duration-[250ms] flex justify-start items-center' onChange={props.handleChange} type='text' name='purchaseTime' value={props.inputData.purchaseTime} />
+            <button className='justify-center items-center bg-gradient-to-l from-black to-green text-white rounded p-3 duration-[250ms] mt-5 hover:from-dark-gray hover:to-dark-green' onClick={props.refreshDate}>Refresh Date</button>
           </div>
         </div>
       </div>

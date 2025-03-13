@@ -268,54 +268,70 @@ export default function App() {
   }
 
   function missingInfoScenarios() {
+    // Create an array to hold missing info messages
+    const messages = [];
 
     if (inputData.storeBox === true) {
       const store = document.getElementById('store');
       if (store) {
         if (inputData.storeNameBox === false) {
-          store.style.visibility = 'hidden'
+          store.style.visibility = 'hidden';
+        } else {
+          store.style.visibility = 'visible';
         }
-        else {
-          store.style.visibility = 'visible'
+      }
+
+      const address = document.getElementById('address');
+      if (address) {
+        if (inputData.storeAddressBox === false) {
+          address.style.visibility = 'hidden';
+        } else {
+          address.style.visibility = 'visible';
         }
       }
-      if (inputData.storeAddressBox === false) {
-        document.getElementById('address').style.visibility = 'hidden'
+
+      const phone = document.getElementById('phone');
+      if (phone) {
+        if (inputData.storePhoneBox === false) {
+          phone.style.visibility = 'hidden';
+        } else {
+          phone.style.visibility = 'visible';
+        }
       }
-      else {
-        document.getElementById('address').style.visibility = 'visible'
-      }
-      if (inputData.storePhoneBox === false) {
-        document.getElementById('phone').style.visibility = 'hidden'
-      }
-      else {
-        document.getElementById('phone').style.visibility = 'visible'
+    } else {
+      const store = document.getElementById('store');
+      const address = document.getElementById('address');
+      const phone = document.getElementById('phone');
+      
+      if (store) store.style.visibility = 'hidden';
+      if (address) address.style.visibility = 'hidden';
+      if (phone) phone.style.visibility = 'hidden';
+    }
+
+    const date = document.getElementById('date');
+    if (date) {
+      if (inputData.purchaseDateBox === true) {
+        date.style.visibility = 'visible';
+      } else {
+        date.style.visibility = 'hidden';
       }
     }
 
-    else {
-      document.getElementById('store').style.visibility = 'hidden'
-      document.getElementById('address').style.visibility = 'hidden'
-      document.getElementById('phone').style.visibility = 'hidden'
+    const subtotal = document.getElementById('subtotal');
+    const tax = document.getElementById('tax');
+    const total = document.getElementById('total');
+    
+    if (inputData.totalSpentBox === true) {
+      if (subtotal) subtotal.style.visibility = 'visible';
+      if (tax) tax.style.visibility = 'visible';
+      if (total) total.style.visibility = 'visible';
+    } else {
+      if (subtotal) subtotal.style.visibility = 'hidden';
+      if (tax) tax.style.visibility = 'hidden';
+      if (total) total.style.visibility = 'hidden';
     }
 
-    if (inputData.purchaseDateBox === true){
-      document.getElementById('date').style.visibility = 'visible'
-    }
-    else {
-      document.getElementById('date').style.visibility = 'hidden'
-    }
-
-    if (inputData.totalSpentBox === true){
-      document.getElementById('subtotal').style.visibility = 'visible'
-      document.getElementById('tax').style.visibility = 'visible'
-      document.getElementById('total').style.visibility = 'visible'
-    }
-    else {
-      document.getElementById('subtotal').style.visibility = 'hidden'
-      document.getElementById('tax').style.visibility = 'hidden'
-      document.getElementById('total').style.visibility = 'hidden'
-    }
+    return messages;
   }
 
   function toggleTypeface() {
@@ -392,118 +408,184 @@ export default function App() {
   
   useEffect(() => {
       if (!blurryReceipt) {
-        document.getElementById('receipt').classList.remove('blur-[2px]')
+        const receipt = document.getElementById('receipt');
+        if (receipt) {
+          receipt.classList.remove('blur-[2px]');
+        }
+      } else {
+        const receipt = document.getElementById('receipt');
+        if (receipt) {
+          receipt.classList.add('blur-[2px]');
+        }
       }
-      else {
-        document.getElementById('receipt').classList.add('blur-[2px]')
-      }
-  })
+  }, [blurryReceipt]);
 
-  useEffect(() => calculateTotal())
+  useEffect(() => calculateTotal(), [receiptItems]);
 
-  useEffect(() => inputData.address2 ? setReceiptLength(375) : setReceiptLength(BASE_RECEIPT_HEIGHT), [inputData.address2])
+  useEffect(() => inputData.address2 ? setReceiptLength(375) : setReceiptLength(BASE_RECEIPT_HEIGHT), [inputData.address2]);
   
-  useEffect(() => missingInfoScenarios())
+  useEffect(() => {
+    // Only call missingInfoScenarios if we're on a page that has the receipt displayed
+    const receipt = document.getElementById('receipt');
+    if (receipt) {
+      missingInfoScenarios();
+    }
+  }, [inputData.storeBox, inputData.storeNameBox, inputData.storeAddressBox, inputData.storePhoneBox, 
+      inputData.purchaseDateBox, inputData.totalSpentBox]);
 
   return (
-    <div className='flex flex-col items-center'>
-      <h1 className='flex justify-center items-center text-green text-4xl mt-5'>Receipt Image Generator</h1>
-      <BrowserRouter>
-        <Tabs />
-        <div className='flex flex-col mt-5 text-white w-full'>
-          <Receipt 
-            checkCityComma={checkCityComma}
-            subItem={subItem}
-            europeanFormat={europeanFormat}
-            storeData={storeData}
-            inputData={inputData}
-            isRestaurant={restaurant}
-            storeName={inputData.storeName}
-            customStore={customStore}
-            purchaseDate={inputData.purchaseDate}
-            purchaseTime={inputData.purchaseTime}
-            subtotal={subtotal}
-            tax={tax}
-            total={total}
-            receiptItems={receiptItems}
-            receiptHeightStyle={receiptHeightStyle}
-            removeItemHandler={removeItem}
-            suppressDollarSign={suppressDollarSign}
-          />
-          <Routes>
-            <Route
-              exact
-              path='/' 
-              element={
-                <CreateReceipt
-                  addItemsHandler={addItems}
-                  handleChange={handleChange}
-                  handleSelect={handleSelect}
-                  receiptLength={receiptHeightStyle}
-                  inputData={inputData}
-                  refreshDate={refreshDate}
-                  isRestaurant={restaurant}
-                  allowAddressEdit={allowAddressEdit}
-                  clearAddress={clearAddress}
-                  updateItems={updateItems}
-                  clearItems={clearItems}
-                  subItem={subItem}
-                  handleCustomStoreToggle={handleCustomStoreToggle}
-                  handleCustomStoreNameChange={handleCustomStoreNameChange}
-                />
-              }
-            />
-            <Route
-              path='create-receipt' 
-              element={
-                <CreateReceipt
-                  addItemsHandler={addItems}
-                  handleChange={handleChange}
-                  handleSelect={handleSelect}
-                  receiptLength={receiptHeightStyle}
-                  inputData={inputData}
-                  refreshDate={refreshDate}
-                  isRestaurant={restaurant}
-                  allowAddressEdit={allowAddressEdit}
-                  clearAddress={clearAddress}
-                  updateItems={updateItems}
-                  clearItems={clearItems}
-                  subItem={subItem}
-                  handleCustomStoreToggle={handleCustomStoreToggle}
-                  handleCustomStoreNameChange={handleCustomStoreNameChange}
-                />
-              }
-            />
-            <Route
-              path='data-tools'
-              element={
-                <DataTools
-                  handleCSV={handleCSV}
-                  notifyUserOfFormat={notifyUserOfFormat}
-                  regenerateCSVData={regenerateCSVData}
-                  refreshDate={refreshDate}
-                  addItemsHandler={addItems}
-                />
-              }
-            />
-            <Route
-              path='edit-receipt'
-              element={
-                <EditReceipt
-                  europeanFormat={handleFormat}
-                  handleBlur={handleBlur}
-                  handleDollarSign={handleDollarSign}
-                  missingInfoScenarios={missingInfoScenarios}
-                  toggleTypeface={toggleTypeface}
-                  handleChange={handleChange}
-                  inputData={inputData}
-                />
-              }
-            />
-          </Routes>
-        </div>
-      </BrowserRouter>
-    </div>
+    <BrowserRouter>
+    <main className="min-h-screen bg-black">
+      <Routes>
+        <Route path="/" element={
+          <div className="flex flex-col xl:flex-row">
+            <div className="flex min-h-screen flex-col items-center xl:w-1/2 xl:mr-10 bg-dark-gray">
+              <div className="flex-1 w-full m-0 xl:m-5">
+                <Tabs />
+                <div id="tab-content" className='container mx-auto p-0'>
+                  {/* Home Route Content */}
+                  <CreateReceipt
+                    handleChange={handleChange}
+                    handleSelect={handleSelect}
+                    handleCustomStoreNameChange={handleCustomStoreNameChange}
+                    isRestaurant={restaurant}
+                    inputData={inputData}
+                    updateItems={updateItems}
+                    clearItems={clearItems}
+                    refreshDate={refreshDate}
+                    allowAddressEdit={allowAddressEdit}
+                    clearAddress={clearAddress}
+                    handleCustomStoreToggle={handleCustomStoreToggle}
+                    subItem={subItem}
+                  />
+                  <div className="flex flex-col items-center container mx-auto mt-10" id="checklistItems">
+                    {missingInfoScenarios && missingInfoScenarios().length > 0 && (
+                      <>
+                        <hr className="w-11/12 container mx-auto" />
+                        {missingInfoScenarios().map((scenario, i) => (
+                          <p className="text-white" key={i}>{scenario}</p>
+                        ))}
+                      </>
+                    )}
+                  </div>
+                  <hr className="w-11/12 container mx-auto my-5" />
+                </div>
+                <button id="restock" className='justify-center items-center bg-gradient-to-l from-black to-green text-white rounded p-1 m-1 duration-250 flex' onClick={toggleTypeface}>Toggle Typeface</button>
+              </div>
+            </div>
+            <div className="flex-none min-h-screen flex flex-col items-center overflow-x-hidden bg-black">
+              <Receipt
+                storeData={storeData}
+                storeName={inputData.storeName}
+                purchaseDate={inputData.purchaseDate}
+                purchaseTime={inputData.purchaseTime}
+                receiptItems={receiptItems}
+                tax={tax}
+                subtotal={subtotal}
+                total={total}
+                europeanFormat={europeanFormat}
+                blurryReceipt={blurryReceipt}
+                suppressDollarSign={suppressDollarSign}
+                checkCityComma={checkCityComma}
+                receiptHeightStyle={`min-h-[${receiptLength}px]`}
+                inputData={inputData}
+                isRestaurant={restaurant}
+                removeItemHandler={removeItem}
+                customStore={customStore}
+              />
+            </div>
+          </div>
+        } />
 
+        <Route path="/edit-receipt" element={
+          <div className="flex flex-col xl:flex-row">
+            <div className="flex min-h-screen flex-col items-center xl:w-1/2 xl:mr-10 bg-dark-gray">
+              <div className="flex-1 w-full m-0 xl:m-5">
+                <Tabs />
+                <div id="tab-content" className='container mx-auto p-0'>
+                  {/* Edit Receipt Route Content */}
+                  <EditReceipt
+                    key={`${europeanFormat}${blurryReceipt}${suppressDollarSign}`}
+                    handleFormat={handleFormat}
+                    handleDollarSign={handleDollarSign}
+                    handleBlur={handleBlur}
+                    europeanFormat={europeanFormat}
+                    blurryReceipt={blurryReceipt}
+                    suppressDollarSign={suppressDollarSign}
+                    handleChange={handleChange}
+                    inputData={inputData}
+                    toggleTypeface={toggleTypeface}
+                    missingInfoScenarios={missingInfoScenarios}
+                  />
+                </div>
+                <button id="restock" className='justify-center items-center bg-gradient-to-l from-black to-green text-white rounded p-1 m-1 duration-250 flex' onClick={toggleTypeface}>Toggle Typeface</button>
+              </div>
+            </div>
+            <div className="flex-none min-h-screen flex flex-col items-center overflow-x-hidden bg-black">
+              <Receipt
+                storeData={storeData}
+                storeName={inputData.storeName}
+                purchaseDate={inputData.purchaseDate}
+                purchaseTime={inputData.purchaseTime}
+                receiptItems={receiptItems}
+                tax={tax}
+                subtotal={subtotal}
+                total={total}
+                europeanFormat={europeanFormat}
+                blurryReceipt={blurryReceipt}
+                suppressDollarSign={suppressDollarSign}
+                checkCityComma={checkCityComma}
+                receiptHeightStyle={`min-h-[${receiptLength}px]`}
+                inputData={inputData}
+                isRestaurant={restaurant}
+                removeItemHandler={removeItem}
+                customStore={customStore}
+              />
+            </div>
+          </div>
+        } />
+
+        <Route path="/data-tools" element={
+          <div className="flex flex-col xl:flex-row">
+            <div className="flex min-h-screen flex-col items-center xl:w-1/2 xl:mr-10 bg-dark-gray">
+              <div className="flex-1 w-full m-0 xl:m-5">
+                <Tabs />
+                <div id="tab-content" className='container mx-auto p-0'>
+                  {/* Data Tools Route Content */}
+                  <DataTools
+                    handleCSV={handleCSV}
+                    csvFile={csvFile}
+                    regenerateCSVData={regenerateCSVData}
+                  />
+                </div>
+                <button id="restock" className='justify-center items-center bg-gradient-to-l from-black to-green text-white rounded p-1 m-1 duration-250 flex' onClick={toggleTypeface}>Toggle Typeface</button>
+              </div>
+            </div>
+            <div className="flex-none min-h-screen flex flex-col items-center overflow-x-hidden bg-black">
+              <Receipt
+                storeData={storeData}
+                storeName={inputData.storeName}
+                purchaseDate={inputData.purchaseDate}
+                purchaseTime={inputData.purchaseTime}
+                receiptItems={receiptItems}
+                tax={tax}
+                subtotal={subtotal}
+                total={total}
+                europeanFormat={europeanFormat}
+                blurryReceipt={blurryReceipt}
+                suppressDollarSign={suppressDollarSign}
+                checkCityComma={checkCityComma}
+                receiptHeightStyle={`min-h-[${receiptLength}px]`}
+                inputData={inputData}
+                isRestaurant={restaurant}
+                removeItemHandler={removeItem}
+                customStore={customStore}
+              />
+            </div>
+          </div>
+        } />
+      </Routes>
+    </main>
+    </BrowserRouter>
   );
 }

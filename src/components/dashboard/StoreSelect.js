@@ -9,14 +9,14 @@ export default function StoreSelect(props) {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'space-between',
-    color: 'green',
+    color: '#4cd137',
     fontWeight: 'bold'
   };
 
   const groupBadgeStyles = {
-    backgroundColor: 'white',
+    backgroundColor: '#1e272e',
     borderRadius: '2em',
-    color: '#300D38',
+    color: '#4cd137',
     display: 'inline-block',
     fontSize: 8,
     fontWeight: 'normal',
@@ -36,27 +36,27 @@ export default function StoreSelect(props) {
   const selectStyles = {
     menu: (provided) => ({
       ...provided,
-      backgroundColor: '#300D38',
+      backgroundColor: '#1e272e',
       width: '70%',
       minWidth: '250px'
     }),
     option: (provided, state) => ({
       ...provided,
       color: state.isFocused 
-        ? '#300D38'
-        : 'white',
+        ? '#1e272e'
+        : '#f5f6fa',
       backgroundImage: state.isFocused 
-        ? 'linear-gradient(to left, white, green)' 
+        ? 'linear-gradient(to left, #f5f6fa, #4cd137)' 
         : '',
       backgroundColor: state.isFocused
         ? ''
-        : '#300D38',
+        : '#1e272e',
       height: 25,
       paddingTop: 5
     }),
     control: (provided) => ({
       ...provided,
-      backgroundImage: 'linear-gradient(to left, white, green)',
+      backgroundImage: 'linear-gradient(to left, #1e272e, #4cd137)',
       display: 'flex',
       width: '70%',
       minWidth: '250px',
@@ -66,7 +66,11 @@ export default function StoreSelect(props) {
     }),
     placeholder: (provided) => ({
       ...provided,
-      color: '#300D38'
+      color: '#f5f6fa'
+    }),
+    singleValue: (provided) => ({
+      ...provided,
+      color: '#f5f6fa'
     })
   }
   return (

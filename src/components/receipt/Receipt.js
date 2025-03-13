@@ -50,9 +50,22 @@ export default function Receipt(props) {
 
     const StoreBanner = () => {
       if (customStore.useCustomStoreName && customStore.customStoreName !== '') {
-        return <h3 id='store'>{customStore.customStoreName}</h3>;
+        return (
+          <h3 id='store' className='text-center font-bold text-xl mb-4 pt-2'>
+            {customStore.customStoreName}
+          </h3>
+        );
       } else {
-        return <img src={`images/stores/${props.storeName}.png`} id='store' className='block h-[150px] mb-[1em]' alt='store logo on receipt' />;
+        return (
+          <div className='flex justify-center items-center h-[150px] mb-[1em] overflow-hidden'>
+            <img 
+              src={`images/stores/${props.storeName}.png`} 
+              id='store' 
+              className='object-contain max-h-[150px] max-w-full' 
+              alt='store logo on receipt' 
+            />
+          </div>
+        );
       }
     }
 
