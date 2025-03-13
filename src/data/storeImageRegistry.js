@@ -158,15 +158,18 @@ export const storeImageRegistry = {
 export const getStoreImageData = (storeKey) => {
   if (!storeKey) return null;
   
-  // Normalize the store key to match registry format (lowercase, no spaces or special chars)
   const normalizedKey = storeKey.toLowerCase().replace(/[^a-z0-9]/g, '');
   
-  // Return the store data from registry or generate fallback
-  return storeImageRegistry[normalizedKey] || {
-    imagePath: `/images/stores/${normalizedKey}.png`,
-    displayName: formatStoreName(storeKey),
-    fallbackColor: "#cccccc" // Default gray for unknown stores
-  };
+  // For non-registry entries, resolve the path dynamically
+  if (!storeImageRegistry[normalizedKey]) {
+    return {
+      imagePath: resolveAssetPath(`images/stores/${normalizedKey}.png`),
+      displayName: formatStoreName(storeKey),
+      fallbackColor: "#cccccc"
+    };
+  }
+  
+  return storeImageRegistry[normalizedKey];
 };
 
 /**

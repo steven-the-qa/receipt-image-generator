@@ -5,14 +5,11 @@ export const resolveAssetPath = (path) => {
   // Remove leading slash if present
   const normalizedPath = path.startsWith('/') ? path.substring(1) : path;
   
-  // In development, the base URL might be different than in production
-  const isProd = process.env.NODE_ENV === 'production';
+  // Check if we're in production (GitHub Pages) or development
+  const isGitHubPages = window.location.hostname.includes('github.io');
   
-  // You might need to adjust these based on your specific deployment
-  const prodBasePath = ''; // Update if your production assets are in a subdirectory
-  const devBasePath = ''; // Update if your dev assets are in a different location
-  
-  const basePath = isProd ? prodBasePath : devBasePath;
+  // Base path depends on environment
+  const basePath = isGitHubPages ? '/receipt-image-generator' : '';
   
   return `${basePath}/${normalizedPath}`;
 }; 
