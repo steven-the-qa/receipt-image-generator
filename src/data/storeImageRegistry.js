@@ -163,6 +163,7 @@ export const getStoreImageData = (storeKey) => {
   
   // Return the store data from registry or generate fallback
   return storeImageRegistry[normalizedKey] || {
+    // For non-registry stores, explicitly use a path guaranteed to work with our path resolution
     imagePath: resolveAssetPath(`images/stores/${normalizedKey}.png`),
     displayName: formatStoreName(storeKey),
     fallbackColor: "#cccccc" // Default gray for unknown stores

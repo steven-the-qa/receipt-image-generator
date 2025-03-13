@@ -14,17 +14,28 @@ export const resolveAssetPath = (path) => {
   // Remove leading slash if present
   const normalizedPath = path.startsWith('/') ? path.substring(1) : path;
   
-  // Multiple ways to detect production:
-  // 1. Check for GitHub Pages hostname
-  // 2. Check for deployment environment variable
-  // 3. Check for production build
-  const isProduction = 
-    window.location.hostname.includes('github.io') || 
-    process.env.REACT_APP_DEPLOY === 'true' ||
-    process.env.NODE_ENV === 'production';
+  // Check production in multiple ways (GitHub Pages detection is most reliable)
+  const isGitHubPages = window.location.hostname.includes('github.io');
+  const isDeployEnv = process.env.REACT_APP_DEPLOY === 'true';
+  const isProductionBuild = process.env.NODE_ENV === 'production';
   
-  // Base path depends on environment
+  const isProduction = isGitHubPages || isDeployEnv || isProductionBuild;
+  
+  // In GitHub Pages, we need to include the repo name in the path
   const basePath = isProduction ? '/receipt-image-generator' : '';
+  
+  // Log path info in console in production mode to help debug
+  if (isProduction) {
+    console.debug(`[PathResolver] 
+      Original path: ${path}
+      Normalized: ${normalizedPath}
+      isGitHubPages: ${isGitHubPages}
+      isProductionBuild: ${isProductionBuild}
+      isDeployEnv: ${isDeployEnv}
+      Base path: ${basePath}
+      Final path: ${basePath}/${normalizedPath}
+    `);
+  }
   
   return `${basePath}/${normalizedPath}`;
 }; 
