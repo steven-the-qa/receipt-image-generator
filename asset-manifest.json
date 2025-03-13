@@ -1,13 +1,13 @@
 {
   "files": {
-    "main.css": "/receipt-image-generator/static/css/main.56a770f1.css",
-    "main.js": "/receipt-image-generator/static/js/main.2e820b1b.js",
+    "main.css": "/receipt-image-generator/static/css/main.a5aad16a.css",
+    "main.js": "/receipt-image-generator/static/js/main.36e69963.js",
     "index.html": "/receipt-image-generator/index.html",
-    "main.56a770f1.css.map": "/receipt-image-generator/static/css/main.56a770f1.css.map",
-    "main.2e820b1b.js.map": "/receipt-image-generator/static/js/main.2e820b1b.js.map"
+    "main.a5aad16a.css.map": "/receipt-image-generator/static/css/main.a5aad16a.css.map",
+    "main.36e69963.js.map": "/receipt-image-generator/static/js/main.36e69963.js.map"
   },
   "entrypoints": [
-    "static/css/main.56a770f1.css",
-    "static/js/main.2e820b1b.js"
+    "static/css/main.a5aad16a.css",
+    "static/js/main.36e69963.js"
   ]
 }
