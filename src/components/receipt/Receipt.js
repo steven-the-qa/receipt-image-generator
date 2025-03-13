@@ -1,5 +1,6 @@
 import React from 'react';
 import ReceiptItem from './ReceiptItem'
+import StoreImage from '../common/StoreImage'
 
 export default function Receipt(props) {
     const currentStore = props.storeData.filter(store => store.key === props.storeName)[0]
@@ -56,33 +57,14 @@ export default function Receipt(props) {
           </h3>
         );
       } else {
-        // Get the display name from the current store
-        const displayName = currentStore ? currentStore.displayName : 
-                           props.storeName.charAt(0).toUpperCase() + props.storeName.slice(1);
-        
-        // Handle special formatting for store names like 7-Eleven
-        const formattedDisplayName = displayName === "7eleven" ? "7-Eleven" : displayName;
-        
         return (
           <div id='store' className='flex flex-col justify-center items-center h-[130px] mb-4 overflow-hidden'>
-            {/* Use inline rendering with fallback */}
-            <div className="flex flex-col justify-center items-center">
-              <img 
-                src={`/images/stores/${props.storeName}.png`}
-                className='object-contain max-h-[100px] max-w-full'
-                alt={`${displayName} logo`}
-                onError={(e) => {
-                  console.log(`Using text fallback for: ${props.storeName}`);
-                  e.target.style.display = 'none';
-                  
-                  // Create and add the text fallback element directly
-                  const textEl = document.createElement('h3');
-                  textEl.className = 'text-center font-bold text-xl tracking-tight';
-                  textEl.textContent = formattedDisplayName;
-                  e.target.parentNode.appendChild(textEl);
-                }}
-              />
-            </div>
+            <StoreImage 
+              storeName={props.storeName}
+              size="medium"
+              className="w-full"
+              showDebug={false}
+            />
           </div>
         );
       }
