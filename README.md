@@ -11,7 +11,6 @@ Receipt Image Generator is a flexible, browser-based utility for creating realis
 - **Custom Receipt Creation**: Generate receipts with customizable store names, dates, items, prices, and totals
 - **Realistic Formatting Options**: Configure receipt width, fonts, spacing, and overall appearance
 - **Visual Effects**: Add realistic imperfections like skewing, rotation, shadows, and noise to simulate camera-captured receipts
-- **Multiple Export Options**: Download receipts as PNG, JPEG, or PDF files
 - **Preset Templates**: Use built-in templates for common receipt styles (grocery, restaurant, retail, etc.)
 - **Batch Generation**: Create multiple receipts with varying parameters for comprehensive testing
 - **Mobile-Friendly Interface**: Create and preview receipts directly on mobile devices
@@ -42,7 +41,6 @@ Receipt Image Generator is a flexible, browser-based utility for creating realis
 3. Customize the receipt content, format, and appearance
 4. Apply visual effects to simulate camera capture if desired
 5. Preview the generated receipt
-6. Download in your preferred image format
 
 ## Example Usage
 
