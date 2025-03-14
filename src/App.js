@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import * as moment from 'moment'
+import moment from 'moment'
 import Papa from 'papaparse'
 import * as retailerInfo from './data/retailerInfo.json'
 import Receipt from './components/receipt/Receipt'
@@ -33,6 +33,8 @@ export default function App() {
   const storeData = retailerInfo.default
   const defaultStore = storeData.filter(store => store.key === '7eleven')[0]
   const [restaurant, setRestaurant] = useState(false)
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [currentTypeface, setCurrentTypeface] = useState('font-sans')
   const [inputData, setInputData] = useState({
     storeName: '7eleven',
     purchaseDate: moment().format('MM/DD/YYYY'),
@@ -69,6 +71,62 @@ export default function App() {
     useCustomStoreName: false,
     customStoreName: '',
   });
+
+  // Toggle mobile menu
+  const toggleMobileMenu = () => {
+    const sidebar = document.getElementById('sidebar');
+    sidebar.classList.toggle('hidden');
+    setMobileMenuOpen(!mobileMenuOpen);
+  };
+
+  // Close mobile menu (with option to delay)
+  const closeMobileMenu = (delay = 0) => {
+    if (delay) {
+      setTimeout(() => {
+        const sidebar = document.getElementById('sidebar');
+        if (window.innerWidth < 768) {
+          sidebar.classList.add('hidden');
+          setMobileMenuOpen(false);
+        }
+      }, delay);
+    } else {
+      const sidebar = document.getElementById('sidebar');
+      if (window.innerWidth < 768) {
+        sidebar.classList.add('hidden');
+        setMobileMenuOpen(false);
+      }
+    }
+  };
+
+  // After adding an item on mobile, scroll back to the form
+  const handleMobileItemAdd = () => {
+    updateItems();
+    
+    // On mobile, scroll to see the preview after a short delay
+    if (window.innerWidth < 768) {
+      setTimeout(() => {
+        const previewSection = document.querySelector('.md\\:hidden.w-full.bg-slate-900');
+        if (previewSection) {
+          previewSection.scrollIntoView({ behavior: 'smooth' });
+        }
+      }, 100);
+    }
+  };
+
+  // After updating form settings on mobile, scroll to see the preview
+  const handleMobileFormUpdate = (updateFn) => {
+    updateFn();
+    
+    // On mobile, scroll to see the preview after a short delay
+    if (window.innerWidth < 768) {
+      setTimeout(() => {
+        const previewSection = document.querySelector('.md\\:hidden.w-full.bg-slate-900');
+        if (previewSection) {
+          previewSection.scrollIntoView({ behavior: 'smooth' });
+        }
+      }, 100);
+    }
+  };
 
   function handleChange(e) {
     const {name, value, type, checked} = e.target
@@ -231,8 +289,8 @@ export default function App() {
 
     for (let i = 1; i < csvData.length; i++) {
       bulkDescriptions.push(csvData[i][0])
-      bulkPrices.push(csvData[i][1])
-      bulkQuantities.push(csvData[i][2])
+      bulkPrices.push(parseFloat(csvData[i][1]))
+      bulkQuantities.push(parseInt(csvData[i][2]))
     }
 
     for (let i = 0; i < bulkDescriptions.length; i++) {
@@ -260,6 +318,18 @@ export default function App() {
     setReceiptItems(receiptItemsUpdate)
     setReceiptItemsCount(receiptItemsCount + bulkReceiptItems.length)
     setReceiptLength(receiptLength + extraLength)
+    
+    // Calculate the new total after importing items
+    let newSubtotal = 0
+    for (let i = 0; i < receiptItemsUpdate.length; i++) {
+      if (receiptItemsUpdate[i][1] && receiptItemsUpdate[i][2]) {
+        newSubtotal += (receiptItemsUpdate[i][2] * receiptItemsUpdate[i][1])
+      }
+    }
+    setSubtotal(Math.ceil(newSubtotal * 100)/100)
+    // Calculate total directly from the new subtotal value
+    const newTotal = (Math.ceil(newSubtotal * 100)/100 * tax) + Math.ceil(newSubtotal * 100)/100
+    setTotal(newTotal)
   }
 
   function regenerateCSVData() {
@@ -276,54 +346,14 @@ export default function App() {
 
   // Make missingInfoScenarios a memoized function that only changes when related dependencies change
   const missingInfoScenarios = useCallback(() => {
-    if (!inputData.storeBox) {
-      document.getElementById('store').classList.add('hidden')
-      document.getElementById('address').classList.add('hidden')
-      document.getElementById('phone').classList.add('hidden')
-    } else {
-      document.getElementById('store').classList.remove('hidden')
-      
-      if (inputData.storeNameBox) {
-        document.getElementById('store').classList.remove('hidden')
-      } else {
-        document.getElementById('store').classList.add('hidden')
-      }
-
-      if (inputData.storeAddressBox) {
-        document.getElementById('address').classList.remove('hidden')
-      } else {
-        document.getElementById('address').classList.add('hidden')
-      }
-
-      if (inputData.storePhoneBox) {
-        document.getElementById('phone').classList.remove('hidden')
-      } else {
-        document.getElementById('phone').classList.add('hidden')
-      }
-    }
-
-    if (inputData.purchaseDateBox) {
-      document.getElementById('date').classList.remove('hidden')
-    } else {
-      document.getElementById('date').classList.add('hidden')
-    }
-
-    if (inputData.totalSpentBox) {
-      document.getElementById('subtotal').parentElement.parentElement.classList.remove('hidden')
-    } else {
-      document.getElementById('subtotal').parentElement.parentElement.classList.add('hidden')
-    }
+    // Visibility is now controlled via props, so this function just serves as an 
+    // event handler for the checkbox settings in EditReceipt
+    // No DOM manipulation needed
   }, [inputData.storeBox, inputData.storeNameBox, inputData.storeAddressBox, inputData.storePhoneBox, 
       inputData.purchaseDateBox, inputData.totalSpentBox]);
 
   function toggleTypeface() {
-    const elem = document.getElementById('receipt');
-    const classes = elem.classList;
-    if (classes.contains('font-mono')) {
-      elem.classList.remove('font-mono');
-    } else {
-      elem.classList.add('font-mono');
-    }
+    setCurrentTypeface(prev => prev === 'font-sans' ? 'font-mono' : 'font-sans');
   }
 
   function handleFormat() {
@@ -354,15 +384,18 @@ export default function App() {
   }
 
   function calculateTotal() {
-    let total = 0
+    let newSubtotal = 0
 
     for (let i = 0; i < receiptItems.length; i++) {
       if (receiptItems[i][1] && receiptItems[i][2]) {
-        total += (receiptItems[i][2] * receiptItems[i][1])
+        newSubtotal += (receiptItems[i][2] * receiptItems[i][1])
       }
     }
-    setSubtotal(Math.ceil(total * 100)/100)
-    setTotal((subtotal * tax) + subtotal)
+    const roundedSubtotal = Math.ceil(newSubtotal * 100)/100
+    setSubtotal(roundedSubtotal)
+    // Calculate total directly from the calculated subtotal value
+    const newTotal = (roundedSubtotal * tax) + roundedSubtotal
+    setTotal(newTotal)
   }
 
   function handleCustomStoreToggle() {
@@ -389,44 +422,38 @@ export default function App() {
   }
   
   useEffect(() => {
-      if (!blurryReceipt) {
-        const receipt = document.getElementById('receipt');
-        if (receipt) {
-          receipt.classList.remove('blur-[2px]');
-        }
-      } else {
-        const receipt = document.getElementById('receipt');
-        if (receipt) {
-          receipt.classList.add('blur-[2px]');
-        }
-      }
-  }, [blurryReceipt]);
-
-  useEffect(() => {
-    let total = 0
+    let newSubtotal = 0
     for (let i = 0; i < receiptItems.length; i++) {
       if (receiptItems[i][1] && receiptItems[i][2]) {
-        total += (receiptItems[i][2] * receiptItems[i][1])
+        newSubtotal += (receiptItems[i][2] * receiptItems[i][1])
       }
     }
-    setSubtotal(Math.ceil(total * 100)/100)
-    setTotal(prevSubtotal => (prevSubtotal * tax) + prevSubtotal)
+    const roundedSubtotal = Math.ceil(newSubtotal * 100)/100
+    setSubtotal(roundedSubtotal)
+    // Calculate total directly from the calculated subtotal value
+    const newTotal = (roundedSubtotal * tax) + roundedSubtotal
+    setTotal(newTotal)
   }, [receiptItems, tax]);
 
   useEffect(() => inputData.address2 ? setReceiptLength(375) : setReceiptLength(BASE_RECEIPT_HEIGHT), [inputData.address2]);
-  
-  useEffect(() => {
-    // Only call missingInfoScenarios if we're on a page that has the receipt displayed
-    const receipt = document.getElementById('receipt');
-    if (receipt) {
-      missingInfoScenarios();
-    }
-  }, [missingInfoScenarios]);
 
   return (
-    <main className="flex h-screen bg-slate-900 text-white overflow-hidden">
+    <main className="flex flex-col md:flex-row h-screen bg-slate-900 text-white md:overflow-hidden overflow-auto">
+      {/* Mobile Navigation Toggle Button */}
+      <div className="md:hidden bg-slate-800 p-4 flex justify-between items-center border-b border-slate-700">
+        <h1 className="text-xl font-bold text-emerald-400">Receipt Generator</h1>
+        <button 
+          onClick={toggleMobileMenu}
+          className="p-2 bg-slate-700 rounded-lg hover:bg-slate-600 transition-colors"
+        >
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16m-7 6h7"></path>
+          </svg>
+        </button>
+      </div>
+
       {/* Left Sidebar - Navigation */}
-      <aside className="w-64 bg-slate-800 border-r border-slate-700 flex flex-col">
+      <aside id="sidebar" className="hidden md:flex w-full md:w-64 bg-slate-800 border-r border-slate-700 flex-col">
         <div className="p-4 border-b border-slate-700">
           <h1 className="text-xl font-bold text-emerald-400">Receipt Generator</h1>
           <p className="text-xs text-slate-400 mt-1">Create customized receipt images</p>
@@ -444,6 +471,7 @@ export default function App() {
                       : 'text-slate-300 hover:bg-slate-700'
                   }`
                 }
+                onClick={() => closeMobileMenu(50)}
               >
                 <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
@@ -461,6 +489,7 @@ export default function App() {
                       : 'text-slate-300 hover:bg-slate-700'
                   }`
                 }
+                onClick={() => closeMobileMenu(50)}
               >
                 <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
@@ -478,6 +507,7 @@ export default function App() {
                       : 'text-slate-300 hover:bg-slate-700'
                   }`
                 }
+                onClick={() => closeMobileMenu(50)}
               >
                 <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4"></path>
@@ -487,55 +517,26 @@ export default function App() {
             </li>
           </ul>
         </nav>
-
-        <div className="p-4 border-t border-slate-700">
-          <button 
-            onClick={toggleTypeface}
-            className="w-full flex items-center justify-center p-2 bg-slate-700 rounded-lg hover:bg-slate-600 transition-colors"
-          >
-            <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16m-7 6h7"></path>
-            </svg>
-            Toggle Font
-          </button>
-        </div>
+        
+        {/* Toggle Font button removed */}
       </aside>
 
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col">
+      <div className="flex-1 flex flex-col overflow-auto">
         <RedirectHandler>
           <Routes>
             <Route path="/" element={
-              <div className="flex-1 flex flex-col-reverse lg:flex-row overflow-hidden">
-                {/* Forms Column */}
-                <div className="lg:w-3/5 bg-slate-800 overflow-y-auto">
-                  <div className="p-6">
-                    <h2 className="text-2xl font-bold text-emerald-400 mb-6">Create Your Receipt</h2>
-                    <CreateReceipt
-                      handleChange={handleChange}
-                      handleSelect={handleSelect}
-                      handleCustomStoreNameChange={handleCustomStoreNameChange}
-                      isRestaurant={restaurant}
-                      inputData={inputData}
-                      updateItems={updateItems}
-                      clearItems={clearItems}
-                      refreshDate={refreshDate}
-                      allowAddressEdit={allowAddressEdit}
-                      clearAddress={clearAddress}
-                      handleCustomStoreToggle={handleCustomStoreToggle}
-                      subItem={subItem}
-                    />
+              <div className="flex-1 flex flex-col overflow-visible">
+                {/* Preview Section - Mobile View (top) */}
+                <div className="lg:hidden w-full bg-slate-900 border-b border-slate-700">
+                  <div className="w-full p-4 bg-slate-800 border-b border-slate-700 flex justify-between items-center">
+                    <div>
+                      <h3 className="text-lg font-semibold text-emerald-400">Receipt Preview</h3>
+                      <p className="text-xs text-slate-400">Live preview of your generated receipt</p>
+                    </div>
                   </div>
-                </div>
-
-                {/* Preview Column */}
-                <div className="lg:w-2/5 bg-slate-900 flex flex-col items-center">
-                  <div className="w-full p-4 bg-slate-800 border-b border-slate-700">
-                    <h3 className="text-lg font-semibold text-emerald-400">Receipt Preview</h3>
-                    <p className="text-xs text-slate-400">Live preview of your generated receipt</p>
-                  </div>
-                  <div className="flex-1 w-full flex items-center justify-center p-4 overflow-y-auto">
-                    <div className="transform scale-90 md:scale-100 transition-transform shadow-2xl">
+                  <div className="w-full flex items-center justify-center p-4">
+                    <div className="transform scale-75 transition-transform shadow-2xl">
                       <Receipt
                         storeData={storeData}
                         storeName={inputData.storeName}
@@ -554,7 +555,68 @@ export default function App() {
                         isRestaurant={restaurant}
                         removeItemHandler={removeItem}
                         customStore={customStore}
+                        currentTypeface={currentTypeface}
                       />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Main Layout with Forms and Preview */}
+                <div className="flex-1 flex flex-col lg:flex-row overflow-visible">
+                  {/* Forms Column */}
+                  <div className="w-full lg:w-3/5 bg-slate-800 overflow-visible md:overflow-auto">
+                    <div className="p-4 md:p-6">
+                      <h2 className="text-xl md:text-2xl font-bold text-emerald-400 mb-4 md:mb-6">Create Your Receipt</h2>
+                      <CreateReceipt
+                        handleChange={handleChange}
+                        handleSelect={handleSelect}
+                        handleCustomStoreNameChange={handleCustomStoreNameChange}
+                        isRestaurant={restaurant}
+                        inputData={inputData}
+                        updateItems={window.innerWidth < 768 ? handleMobileItemAdd : updateItems}
+                        clearItems={clearItems}
+                        refreshDate={() => handleMobileFormUpdate(refreshDate)}
+                        allowAddressEdit={() => handleMobileFormUpdate(() => allowAddressEdit())}
+                        clearAddress={clearAddress}
+                        handleCustomStoreToggle={() => handleMobileFormUpdate(handleCustomStoreToggle)}
+                        subItem={window.innerWidth < 768 ? () => handleMobileFormUpdate(subItem) : subItem}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Preview Column - Desktop View (right side) */}
+                  <div className="hidden lg:flex lg:w-2/5 bg-slate-900 flex-col items-center overflow-auto">
+                    <div className="w-full p-4 bg-slate-800 border-b border-slate-700">
+                      <div className="flex justify-between items-center">
+                        <div>
+                          <h3 className="text-lg font-semibold text-emerald-400">Receipt Preview</h3>
+                          <p className="text-xs text-slate-400">Live preview of your generated receipt</p>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex-1 w-full flex items-center justify-center p-4 overflow-y-auto">
+                      <div className="transform scale-90 md:scale-100 transition-transform shadow-2xl">
+                        <Receipt
+                          storeData={storeData}
+                          storeName={inputData.storeName}
+                          purchaseDate={inputData.purchaseDate}
+                          purchaseTime={inputData.purchaseTime}
+                          receiptItems={receiptItems}
+                          tax={tax}
+                          subtotal={subtotal}
+                          total={total}
+                          europeanFormat={europeanFormat}
+                          blurryReceipt={blurryReceipt}
+                          suppressDollarSign={suppressDollarSign}
+                          checkCityComma={checkCityComma}
+                          receiptHeightStyle={`min-h-[${receiptLength}px]`}
+                          inputData={inputData}
+                          isRestaurant={restaurant}
+                          removeItemHandler={removeItem}
+                          customStore={customStore}
+                          currentTypeface={currentTypeface}
+                        />
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -562,35 +624,17 @@ export default function App() {
             } />
 
             <Route path="/edit-receipt" element={
-              <div className="flex-1 flex flex-col-reverse lg:flex-row overflow-hidden">
-                {/* Forms Column */}
-                <div className="lg:w-3/5 bg-slate-800 overflow-y-auto">
-                  <div className="p-6">
-                    <h2 className="text-2xl font-bold text-emerald-400 mb-6">Format Receipt</h2>
-                    <EditReceipt
-                      key={`${europeanFormat}${blurryReceipt}${suppressDollarSign}`}
-                      handleFormat={handleFormat}
-                      handleDollarSign={handleDollarSign}
-                      handleBlur={handleBlur}
-                      europeanFormat={europeanFormat}
-                      blurryReceipt={blurryReceipt}
-                      suppressDollarSign={suppressDollarSign}
-                      handleChange={handleChange}
-                      inputData={inputData}
-                      toggleTypeface={toggleTypeface}
-                      missingInfoScenarios={missingInfoScenarios}
-                    />
+              <div className="flex-1 flex flex-col overflow-visible">
+                {/* Preview Section - Mobile View (top) */}
+                <div className="lg:hidden w-full bg-slate-900 border-b border-slate-700">
+                  <div className="w-full p-4 bg-slate-800 border-b border-slate-700 flex justify-between items-center">
+                    <div>
+                      <h3 className="text-lg font-semibold text-emerald-400">Receipt Preview</h3>
+                      <p className="text-xs text-slate-400">Live preview of your generated receipt</p>
+                    </div>
                   </div>
-                </div>
-
-                {/* Preview Column */}
-                <div className="lg:w-2/5 bg-slate-900 flex flex-col items-center">
-                  <div className="w-full p-4 bg-slate-800 border-b border-slate-700">
-                    <h3 className="text-lg font-semibold text-emerald-400">Receipt Preview</h3>
-                    <p className="text-xs text-slate-400">Live preview of your generated receipt</p>
-                  </div>
-                  <div className="flex-1 w-full flex items-center justify-center p-4 overflow-y-auto">
-                    <div className="transform scale-90 md:scale-100 transition-transform shadow-2xl">
+                  <div className="w-full flex items-center justify-center p-4">
+                    <div className="transform scale-75 transition-transform shadow-2xl">
                       <Receipt
                         storeData={storeData}
                         storeName={inputData.storeName}
@@ -609,7 +653,68 @@ export default function App() {
                         isRestaurant={restaurant}
                         removeItemHandler={removeItem}
                         customStore={customStore}
+                        currentTypeface={currentTypeface}
                       />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Main Layout with Forms and Preview */}
+                <div className="flex-1 flex flex-col lg:flex-row overflow-visible">
+                  {/* Forms Column */}
+                  <div className="w-full lg:w-3/5 bg-slate-800 overflow-visible md:overflow-auto">
+                    <div className="p-4 md:p-6">
+                      <h2 className="text-xl md:text-2xl font-bold text-emerald-400 mb-4 md:mb-6">Format Receipt</h2>
+                      <EditReceipt
+                        handleChange={handleChange}
+                        inputData={inputData}
+                        handleFormat={() => handleMobileFormUpdate(handleFormat)}
+                        handleDollarSign={() => handleMobileFormUpdate(handleDollarSign)}
+                        handleBlur={() => handleMobileFormUpdate(handleBlur)}
+                        handleCustomStoreToggle={() => handleMobileFormUpdate(handleCustomStoreToggle)}
+                        handleCustomStoreNameChange={() => handleMobileFormUpdate(handleCustomStoreNameChange)}
+                        blurryReceipt={blurryReceipt}
+                        europeanFormat={europeanFormat}
+                        suppressDollarSign={suppressDollarSign}
+                        toggleTypeface={toggleTypeface}
+                        missingInfoScenarios={missingInfoScenarios}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Preview Column - Desktop View (right side) */}
+                  <div className="hidden lg:flex lg:w-2/5 bg-slate-900 flex-col items-center overflow-auto">
+                    <div className="w-full p-4 bg-slate-800 border-b border-slate-700">
+                      <div className="flex justify-between items-center">
+                        <div>
+                          <h3 className="text-lg font-semibold text-emerald-400">Receipt Preview</h3>
+                          <p className="text-xs text-slate-400">Live preview of your generated receipt</p>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex-1 w-full flex items-center justify-center p-4 overflow-y-auto">
+                      <div className="transform scale-90 md:scale-100 transition-transform shadow-2xl">
+                        <Receipt
+                          storeData={storeData}
+                          storeName={inputData.storeName}
+                          purchaseDate={inputData.purchaseDate}
+                          purchaseTime={inputData.purchaseTime}
+                          receiptItems={receiptItems}
+                          tax={tax}
+                          subtotal={subtotal}
+                          total={total}
+                          europeanFormat={europeanFormat}
+                          blurryReceipt={blurryReceipt}
+                          suppressDollarSign={suppressDollarSign}
+                          checkCityComma={checkCityComma}
+                          receiptHeightStyle={`min-h-[${receiptLength}px]`}
+                          inputData={inputData}
+                          isRestaurant={restaurant}
+                          removeItemHandler={removeItem}
+                          customStore={customStore}
+                          currentTypeface={currentTypeface}
+                        />
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -617,27 +722,17 @@ export default function App() {
             } />
 
             <Route path="/data-tools" element={
-              <div className="flex-1 flex flex-col-reverse lg:flex-row overflow-hidden">
-                {/* Forms Column */}
-                <div className="lg:w-3/5 bg-slate-800 overflow-y-auto">
-                  <div className="p-6">
-                    <h2 className="text-2xl font-bold text-emerald-400 mb-6">Data Import</h2>
-                    <DataTools
-                      handleCSV={handleCSV}
-                      csvFile={csvFile}
-                      regenerateCSVData={regenerateCSVData}
-                    />
+              <div className="flex-1 flex flex-col overflow-visible">
+                {/* Preview Section - Mobile View (top) */}
+                <div className="lg:hidden w-full bg-slate-900 border-b border-slate-700">
+                  <div className="w-full p-4 bg-slate-800 border-b border-slate-700 flex justify-between items-center">
+                    <div>
+                      <h3 className="text-lg font-semibold text-emerald-400">Receipt Preview</h3>
+                      <p className="text-xs text-slate-400">Live preview of your generated receipt</p>
+                    </div>
                   </div>
-                </div>
-
-                {/* Preview Column */}
-                <div className="lg:w-2/5 bg-slate-900 flex flex-col items-center">
-                  <div className="w-full p-4 bg-slate-800 border-b border-slate-700">
-                    <h3 className="text-lg font-semibold text-emerald-400">Receipt Preview</h3>
-                    <p className="text-xs text-slate-400">Live preview of your generated receipt</p>
-                  </div>
-                  <div className="flex-1 w-full flex items-center justify-center p-4 overflow-y-auto">
-                    <div className="transform scale-90 md:scale-100 transition-transform shadow-2xl">
+                  <div className="w-full flex items-center justify-center p-4">
+                    <div className="transform scale-75 transition-transform shadow-2xl">
                       <Receipt
                         storeData={storeData}
                         storeName={inputData.storeName}
@@ -656,7 +751,59 @@ export default function App() {
                         isRestaurant={restaurant}
                         removeItemHandler={removeItem}
                         customStore={customStore}
+                        currentTypeface={currentTypeface}
                       />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Main Layout with Forms and Preview */}
+                <div className="flex-1 flex flex-col lg:flex-row overflow-visible">
+                  {/* Forms Column */}
+                  <div className="w-full lg:w-3/5 bg-slate-800 overflow-visible md:overflow-auto">
+                    <div className="p-4 md:p-6">
+                      <h2 className="text-xl md:text-2xl font-bold text-emerald-400 mb-4 md:mb-6">Data Import</h2>
+                      <DataTools
+                        handleCSV={handleCSV}
+                        csvFile={csvFile}
+                        regenerateCSVData={() => handleMobileFormUpdate(regenerateCSVData)}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Preview Column - Desktop View (right side) */}
+                  <div className="hidden lg:flex lg:w-2/5 bg-slate-900 flex-col items-center overflow-auto">
+                    <div className="w-full p-4 bg-slate-800 border-b border-slate-700">
+                      <div className="flex justify-between items-center">
+                        <div>
+                          <h3 className="text-lg font-semibold text-emerald-400">Receipt Preview</h3>
+                          <p className="text-xs text-slate-400">Live preview of your generated receipt</p>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex-1 w-full flex items-center justify-center p-4 overflow-y-auto">
+                      <div className="transform scale-90 md:scale-100 transition-transform shadow-2xl">
+                        <Receipt
+                          storeData={storeData}
+                          storeName={inputData.storeName}
+                          purchaseDate={inputData.purchaseDate}
+                          purchaseTime={inputData.purchaseTime}
+                          receiptItems={receiptItems}
+                          tax={tax}
+                          subtotal={subtotal}
+                          total={total}
+                          europeanFormat={europeanFormat}
+                          blurryReceipt={blurryReceipt}
+                          suppressDollarSign={suppressDollarSign}
+                          checkCityComma={checkCityComma}
+                          receiptHeightStyle={`min-h-[${receiptLength}px]`}
+                          inputData={inputData}
+                          isRestaurant={restaurant}
+                          removeItemHandler={removeItem}
+                          customStore={customStore}
+                          currentTypeface={currentTypeface}
+                        />
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -665,6 +812,17 @@ export default function App() {
           </Routes>
         </RedirectHandler>
       </div>
+
+      {/* Optional: Add back to top button for easier mobile navigation */}
+      <button 
+        onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+        className="lg:hidden fixed right-4 bottom-4 p-3 bg-emerald-600 text-white rounded-full shadow-lg"
+        aria-label="Back to top"
+      >
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 10l7-7m0 0l7 7m-7-7v18"></path>
+        </svg>
+      </button>
     </main>
   );
 }

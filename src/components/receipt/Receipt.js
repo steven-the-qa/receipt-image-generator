@@ -58,7 +58,7 @@ export default function Receipt(props) {
         );
       } else {
         return (
-          <div id='store' className='flex flex-col justify-center items-center h-[130px] mb-4 overflow-hidden'>
+          <div id='store' className={`flex flex-col justify-center items-center h-[130px] mb-4 overflow-hidden ${!props.inputData.storeBox || !props.inputData.storeNameBox ? 'hidden' : ''}`}>
             <StoreImage 
               storeName={props.storeName}
               size="medium"
@@ -74,7 +74,7 @@ export default function Receipt(props) {
       <div className='flex justify-center'>
         <section 
           id='receipt' 
-          className={`flex flex-col justify-start text-black bg-white w-[20rem] sm:w-[22rem] mx-0 text-xs font-mono font-bold relative ${props.receiptHeightStyle} shadow-xl rounded-sm`}
+          className={`flex flex-col justify-start text-black bg-white w-[20rem] sm:w-[22rem] mx-0 text-xs ${props.currentTypeface || 'font-sans'} font-bold relative ${props.receiptHeightStyle} shadow-xl rounded-sm ${props.blurryReceipt ? 'blur-[2px]' : ''}`}
           style={{
             backgroundImage: 'repeating-linear-gradient(0deg, transparent, transparent 20px, rgba(0,0,0,0.01) 20px, rgba(0,0,0,0.01) 21px)',
             boxShadow: '0 0 10px rgba(0,0,0,0.05), 0 0 5px rgba(0,0,0,0.1), 0 20px 20px -10px rgba(0,0,0,0.1)'
@@ -92,10 +92,10 @@ export default function Receipt(props) {
           
           <div className="px-5 pt-6 pb-8">
             {/*Store Name/Logo*/}
-            <StoreBanner />
+            {props.inputData.storeBox && props.inputData.storeNameBox && <StoreBanner />}
             
             {/*Store Address*/}
-            <div id='address' className='leading-[150%] text-center mb-3'>
+            <div id='address' className={`leading-[150%] text-center mb-3 ${!props.inputData.storeBox || !props.inputData.storeAddressBox ? 'hidden' : ''}`}>
               <div>{address1}</div>
               <div>{address2}</div>
               <div>
@@ -107,8 +107,8 @@ export default function Receipt(props) {
             
             {/*Store Phone Number*/}
             <div className="text-center mb-4">
-              <div id='phone'>{phone}</div>
-              <div id='date' className={`mt-4 ${costcoDateContainer}`}>
+              <div id='phone' className={!props.inputData.storeBox || !props.inputData.storePhoneBox ? 'hidden' : ''}>{phone}</div>
+              <div id='date' className={`mt-4 ${costcoDateContainer} ${!props.inputData.purchaseDateBox ? 'hidden' : ''}`}>
                 <div className={props.storeName === 'costco' ? costcoDate : 'mr-1'}>{props.purchaseDate}</div>
                 {`@ ${props.purchaseTime}`}
               </div>
@@ -143,17 +143,19 @@ export default function Receipt(props) {
             <div className="border-t border-dashed border-gray-400 my-3 mx-2"></div>
             
             {/*Total Spent*/}
-            <div className='flex justify-between items-start p-1 mt-1'>
-              <div style={{marginLeft: 20}}>Subtotal</div>
-              <div id='subtotal'>{formatTotal(props.subtotal)}</div>
-            </div>
-            <div className='flex justify-between items-start p-1 m-0'>
-              <div style={{marginLeft: 20}}>Sales Tax {formatTax(props.tax)}</div>
-              <div id='tax'>{formatTotal(props.subtotal * props.tax)}</div>
-            </div>
-            <div className='flex justify-between items-start p-1 m-0 font-extrabold'>
-              <div style={{marginLeft: 20}}>Total</div>
-              <div id='total' className={props.storeName === 'costco' ? costcoTotal : ''}>{formatTotal(props.total)}</div>
+            <div className={`${!props.inputData.totalSpentBox ? 'hidden' : ''}`}>
+              <div className='flex justify-between items-start p-1 mt-1'>
+                <div style={{marginLeft: 20}}>Subtotal</div>
+                <div id='subtotal'>{formatTotal(props.subtotal)}</div>
+              </div>
+              <div className='flex justify-between items-start p-1 m-0'>
+                <div style={{marginLeft: 20}}>Sales Tax {formatTax(props.tax)}</div>
+                <div id='tax'>{formatTotal(props.subtotal * props.tax)}</div>
+              </div>
+              <div className='flex justify-between items-start p-1 m-0 font-extrabold'>
+                <div style={{marginLeft: 20}}>Total</div>
+                <div id='total' className={props.storeName === 'costco' ? costcoTotal : ''}>{formatTotal(props.total)}</div>
+              </div>
             </div>
             
             {/* Thank you message */}
