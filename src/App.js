@@ -453,11 +453,6 @@ export default function App() {
 
       {/* Left Sidebar - Navigation */}
       <aside id="sidebar" className="hidden md:flex w-full md:w-64 bg-slate-800 border-r border-slate-700 flex-col">
-        <div className="p-4 border-b border-slate-700">
-          <h1 className="text-xl font-bold text-emerald-400">Receipt Generator</h1>
-          <p className="text-xs text-slate-400 mt-1">Create customized receipt images</p>
-        </div>
-        
         <nav className="flex-1 p-4">
           <ul className="space-y-2">
             <li>
@@ -516,8 +511,6 @@ export default function App() {
             </li>
           </ul>
         </nav>
-        
-        {/* Toggle Font button removed */}
       </aside>
 
       {/* Main Content Area */}
