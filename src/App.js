@@ -349,8 +349,7 @@ export default function App() {
     // Visibility is now controlled via props, so this function just serves as an 
     // event handler for the checkbox settings in EditReceipt
     // No DOM manipulation needed
-  }, [inputData.storeBox, inputData.storeNameBox, inputData.storeAddressBox, inputData.storePhoneBox, 
-      inputData.purchaseDateBox, inputData.totalSpentBox]);
+  }, []);
 
   function toggleTypeface() {
     setCurrentTypeface(prev => prev === 'font-sans' ? 'font-mono' : 'font-sans');
