@@ -1,6 +1,7 @@
 name: Playwright UI Tests
 
 env:
+  SLACK_TOKEN: ${{ secrets.SLACK_TOKEN }}
   REDIS_URL: redis://localhost:6379
 
 on:
@@ -45,7 +46,7 @@ jobs:
           node-version: '20'
 
       - name: Install dependencies
-        run: npm ci
+        run: npm install --no-audit --no-fund
 
       - name: Install Playwright Browsers
         run: npx playwright install --with-deps --no-shell
@@ -64,7 +65,7 @@ jobs:
         id: ui_tests
         env:
           FORCE_COLOR: 1
-          SLACK_TOKEN: ${{ secrets.SLACK_TOKEN }}
+          SLACK_TOKEN: ${{ env.SLACK_TOKEN }}
           REPO: ${{ github.repository }}
           BRANCH: ${{ github.ref_name }}
           AUTHOR: ${{ github.triggering_actor }}

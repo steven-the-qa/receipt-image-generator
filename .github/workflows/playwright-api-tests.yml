@@ -1,6 +1,7 @@
 name: Playwright API Tests
 
 env:
+  SLACK_TOKEN: ${{ secrets.SLACK_TOKEN }}
   REDIS_URL: redis://localhost:6379
 
 on:
@@ -43,7 +44,7 @@ jobs:
         id: api_tests
         env:
           FORCE_COLOR: 1
-          SLACK_TOKEN: ${{ secrets.SLACK_TOKEN }}
+          SLACK_TOKEN: ${{ env.SLACK_TOKEN }}
           REPO: ${{ github.repository }}
           BRANCH: ${{ github.ref_name }}
           AUTHOR: ${{ github.triggering_actor }}

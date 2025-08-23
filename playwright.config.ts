@@ -11,6 +11,12 @@ export default defineConfig({
     baseURL: 'http://localhost:3000',
     trace: 'retain-on-failure',
   },
+  webServer: {
+    command: 'BROWSER=none PORT=3000 npm start',
+    url: 'http://localhost:3000',
+    reuseExistingServer: true,
+    timeout: 120000,
+  },
   projects: [
     {
       name: 'chrome',
