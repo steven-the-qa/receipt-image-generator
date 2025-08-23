@@ -8,7 +8,13 @@ export default defineConfig({
   workers: process.env.CI ? 1 : undefined,
   reporter: 'list',
   use: {
+    baseURL: 'http://localhost:3000',
     trace: 'retain-on-failure',
+  },
+  webServer: {
+    command: 'npx serve -s build -l 3000',
+    url: 'http://localhost:3000',
+    reuseExistingServer: true,
   },
   projects: [
     {
