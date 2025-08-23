@@ -1,0 +1,16 @@
+{
+  "name": "slack-reporter",
+  "version": "1.0.0",
+  "description": "Slack reporter for Playwright tests running on GitHub Actions",
+  "main": "index.ts",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Steven Boutcher",
+  "license": "ISC",
+  "dependencies": {
+    "@playwright/test": "^1.52.0",
+    "@slack/web-api": "^7.9.2",
+    "dotenv": "^16.5.0"
+  }
+}
