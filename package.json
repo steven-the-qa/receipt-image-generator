@@ -6,6 +6,7 @@
   "dependencies": {
     "@slack/web-api": "^7.10.0",
     "gh-pages": "^6.1.0",
+    "ioredis": "^5.7.0",
     "moment": "^2.24.0",
     "papaparse": "^5.2.0",
     "react": "^16.13.1",
