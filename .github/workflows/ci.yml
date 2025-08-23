@@ -1,0 +1,20 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    uses: ./.github/workflows/build.yml
+
+## Waiting until I have the full API test framework before including this one
+#   api-tests:
+#     needs: build
+#     uses: ./.github/workflows/playwright-api-tests.yml
+
+  ui-tests:
+    needs: build
+    uses: ./.github/workflows/playwright-ui-tests.yml
