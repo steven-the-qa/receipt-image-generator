@@ -12,7 +12,7 @@ export default defineConfig({
   },
   projects: [
     {
-      name: 'chromium',
+      name: 'chrome',
       testIgnore: 'api/**',
       use: { ...devices['Desktop Chrome'] },
     },
@@ -22,7 +22,7 @@ export default defineConfig({
       use: { ...devices['Desktop Firefox'] },
     },
     {
-      name: 'webkit',
+      name: 'safari',
       testIgnore: 'api/**',
       use: { ...devices['Desktop Safari'] },
     },
