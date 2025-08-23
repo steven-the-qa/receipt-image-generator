@@ -93,6 +93,7 @@ const StoreImage = ({
     <div className={`store-image-container flex flex-col items-center justify-center ${className}`}>
       {!imageError && (
         <img
+          data-testid='storeImage'
           src={imageSrc}
           alt={`${storeData.displayName} logo`}
           className={`object-contain max-w-full ${sizes[size]} transition-opacity duration-300 ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}

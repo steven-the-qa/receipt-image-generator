@@ -1,0 +1,61 @@
+name: Playwright API Tests
+
+env:
+  REDIS_URL: redis://localhost:6379
+
+on:
+  workflow_call:
+
+jobs:
+  api-tests:
+    timeout-minutes: 30
+    runs-on: ubuntu-latest
+
+    services:
+      redis:
+        image: redis
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 6379:6379
+
+    steps:
+      - name: Get job ID
+        id: get_job_id
+        env:
+          GH_TOKEN: ${{ github.token }}
+          JOBS_URL: "/repos/${{ github.repository }}/actions/runs/${{ github.run_id }}/jobs"
+        run: |
+          JOB_ID=$(gh api $JOBS_URL | jq '[.jobs[] | select(.name | contains("Playwright API Tests"))][0].id')
+          echo "job_id=$JOB_ID" >> $GITHUB_OUTPUT
+
+      - name: Run API tests
+        id: api_tests
+        env:
+          FORCE_COLOR: 1
+          SLACK_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+          REPO: ${{ github.repository }}
+          BRANCH: ${{ github.ref_name }}
+          AUTHOR: ${{ github.triggering_actor }}
+          RUN_ID: ${{ github.run_id }}
+          JOB_ID: ${{ steps.get_job_id.outputs.job_id }}
+          MAX_RETRIES: 2
+          OUTPUT_FILE: test-results/api-results.json
+        run: >-
+          PLAYWRIGHT_JSON_OUTPUT_NAME=$OUTPUT_FILE
+          npx --no-save --no playwright test
+          --project=api
+          --retries=$MAX_RETRIES
+          --reporter=list,json,./test/playwright/slack-reporter
+
+      - name: Upload API test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          if-no-files-found: warn
+          name: api_test_results
+          path: test-results/
+          retention-days: 15

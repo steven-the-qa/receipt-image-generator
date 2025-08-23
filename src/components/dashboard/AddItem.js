@@ -15,6 +15,7 @@ function AddItem(props) {
                     <label htmlFor='itemDescription' className='text-sm text-slate-300 mb-1 block'>Item Description</label>
                     <input 
                         id="itemDescription" 
+                        data-testid='itemDescription'
                         className='w-full py-2 px-3 bg-slate-800 border border-slate-600 rounded-md text-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-colors'  
                         onChange={props.handleChange} 
                         type='text' 
@@ -28,6 +29,7 @@ function AddItem(props) {
                     <div>
                         <label htmlFor='itemPrice' className='text-sm text-slate-300 mb-1 block'>Price</label>
                         <input 
+                            data-testid='itemPrice'
                             className='w-full py-2 px-3 bg-slate-800 border border-slate-600 rounded-md text-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-colors' 
                             onChange={props.handleChange} 
                             type='text' 
@@ -40,6 +42,7 @@ function AddItem(props) {
                     <div>
                         <label htmlFor='itemQuantity' className='text-sm text-slate-300 mb-1 block'>Quantity</label>
                         <input 
+                            data-testid='itemQuantity'
                             className='w-full py-2 px-3 bg-slate-800 border border-slate-600 rounded-md text-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-colors' 
                             onChange={props.handleChange} 
                             type='text' 
@@ -54,6 +57,7 @@ function AddItem(props) {
                     <label htmlFor='numOfCopies' className='text-sm text-slate-300 mb-1 block'>Number of Copies</label>
                     <input 
                         id="numOfCopies" 
+                        data-testid='numOfCopies'
                         className='w-24 py-2 px-3 bg-slate-800 border border-slate-600 rounded-md text-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-colors'
                         onChange={props.handleChange} 
                         type='text' 
@@ -65,6 +69,7 @@ function AddItem(props) {
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-6">
                 <button 
+                    data-testid='addItem'
                     className='flex items-center justify-center py-2 px-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded transition-colors' 
                     onClick={props.updateItems}
                 >
@@ -75,6 +80,7 @@ function AddItem(props) {
                 </button>
                 
                 <button 
+                    data-testid='addSubItem'
                     className='flex items-center justify-center py-2 px-4 bg-slate-600 hover:bg-slate-500 text-white rounded transition-colors' 
                     onClick={props.subItem}
                 >
@@ -85,6 +91,7 @@ function AddItem(props) {
                 </button>
                 
                 <button 
+                    data-testid='clearItems'
                     className='flex items-center justify-center py-2 px-4 bg-red-600 hover:bg-red-700 text-white rounded transition-colors' 
                     onClick={props.clearItems}
                 >

@@ -1,0 +1,86 @@
+name: Playwright UI Tests
+
+env:
+  REDIS_URL: redis://localhost:6379
+
+on:
+  workflow_call:
+
+jobs:
+  playwright:
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        browser: [chrome, safari]
+        shardIndex: [1, 2]
+        shardTotal: [2]
+        include:
+          - browser: chrome
+            retries: 2
+          - browser: safari
+            retries: 4
+    name: ${{ matrix.browser }}_${{ matrix.shardIndex }}
+    runs-on: ubuntu-latest
+
+    services:
+      redis:
+        image: redis
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 6379:6379
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Install Playwright Browsers
+        run: npx playwright install --with-deps --no-shell
+
+      - name: Get job ID
+        id: get_job_id
+        env:
+          GH_TOKEN: ${{ github.token }}
+          JOB_INDEX: "${{ matrix.shardIndex > 1 && (matrix.browser == 'safari' && '3' || '1') || (matrix.browser == 'safari' && '2' || '0') }}"
+          JOBS_URL: "/repos/${{ github.repository }}/actions/runs/${{ github.run_id }}/jobs"
+        run: |
+          JOB_ID=$(gh api $JOBS_URL | jq --argjson idx "$JOB_INDEX" '[.jobs[] | select(.name | contains("Playwright Tests"))][$idx].id')
+          echo "job_id=$JOB_ID" >> $GITHUB_OUTPUT
+
+      - name: Run UI tests
+        id: ui_tests
+        env:
+          FORCE_COLOR: 1
+          SLACK_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+          REPO: ${{ github.repository }}
+          BRANCH: ${{ github.ref_name }}
+          AUTHOR: ${{ github.triggering_actor }}
+          RUN_ID: ${{ github.run_id }}
+          JOB_ID: ${{ steps.get_job_id.outputs.job_id }}
+          MAX_RETRIES: ${{ matrix.retries }}
+          SHARD_INDEX: ${{ matrix.shardIndex }}
+          SHARD_TOTAL: ${{ matrix.shardTotal }}
+          BROWSER: ${{ matrix.browser }}
+          OUTPUT_FILE: test-results/${{ matrix.browser }}-results-shard${{ matrix.shardIndex }}.json
+        run: >-
+          PLAYWRIGHT_JSON_OUTPUT_NAME=$OUTPUT_FILE
+          npx --no-save --no playwright test
+          --project=$BROWSER
+          --retries=$MAX_RETRIES
+          --shard=$SHARD_INDEX/$SHARD_TOTAL
+          --reporter=list,json,./test/playwright/slack-reporter
+
+      - name: Upload Playwright results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          if-no-files-found: warn
+          name: playwright_results_${{ matrix.browser }}_${{ matrix.shardIndex }}
+          path: test-results/
+          retention-days: 15
+

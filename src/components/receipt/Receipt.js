@@ -58,8 +58,8 @@ export default function Receipt(props) {
         );
       } else {
         return (
-          <div id='store' className={`flex flex-col justify-center items-center h-[130px] mb-4 overflow-hidden ${!props.inputData.storeBox || !props.inputData.storeNameBox ? 'hidden' : ''}`}>
-            <StoreImage 
+          <div data-testid='store' className={`flex flex-col justify-center items-center h-[130px] mb-4 overflow-hidden ${!props.inputData.storeBox || !props.inputData.storeNameBox ? 'hidden' : ''}`}>
+            <StoreImage
               storeName={props.storeName}
               size="medium"
               className="w-full"
@@ -71,7 +71,7 @@ export default function Receipt(props) {
     }
 
     return (
-      <div className='flex justify-center'>
+      <div data-testid='receipt' className='flex justify-center'>
         <section 
           id='receipt' 
           className={`flex flex-col justify-start text-black bg-white w-[20rem] sm:w-[22rem] mx-0 text-xs ${props.currentTypeface || 'font-sans'} font-bold relative ${props.receiptHeightStyle} shadow-xl rounded-sm ${props.blurryReceipt ? 'blur-[2px]' : ''}`}

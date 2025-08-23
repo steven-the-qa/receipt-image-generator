@@ -111,7 +111,8 @@ export default function StoreSelect(props) {
   
   return (
     <Select
-      id='storeSelect' 
+      id='storeSelect'
+      data-testid='store-input'
       options={groupedOptions} 
       styles={selectStyles} 
       onChange={props.onChange} 

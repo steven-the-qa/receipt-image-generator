@@ -24,11 +24,12 @@ export default function ReceiptItem(props) {
         : ''
     const quantityLineVisibility = quantityLine ? "visible pt-1 text-[9px] text-gray-600" : "hidden"
     const lineItemHeight = quantityLine ? 'min-h-[40px]' : 'min-h-[30px]'
-    
+
     return (
-        <div className={`flex flex-col justify-between items-start py-1 px-2 m-0 ${lineItemHeight} relative group hover:bg-gray-50`}>
+        <div data-testid='receiptItem' className={`flex flex-col justify-between items-start py-1 px-2 m-0 ${lineItemHeight} relative group hover:bg-gray-50`}>
             <div className='absolute -left-1 top-1/2 transform -translate-y-1/2 bg-white rounded-full shadow-sm opacity-0 group-hover:opacity-100 transition-opacity z-10'>
                 <button 
+                    data-testid='removeItem'
                     className="w-5 h-5 flex items-center justify-center text-red-500 hover:text-red-700 cursor-pointer" 
                     onClick={() => { props.removeItemHandler(props.index); }}
                     aria-label="Remove item"
@@ -40,17 +41,17 @@ export default function ReceiptItem(props) {
             </div>
             
             <div className='flex justify-between w-full'>
-                <div id='descriptionAndPrice' className='flex justify-between w-full'>
+                <div data-testid='descriptionAndPrice' className='flex justify-between w-full'>
                     <div className='break-words w-[16rem] pr-3'>
                         {description}
                     </div>
-                    <div className='tabular-nums'>
+                    <div data-testid='price' className='tabular-nums'>
                         {props.quantity && props.price && (props.quantity * props.price).toFixed(2)}
                     </div>
                 </div>
             </div>
             
-            <div className={`${quantityLineVisibility} tabular-nums`}>
+            <div data-testid='quantityLine' className={`${quantityLineVisibility} tabular-nums`}>
                 {quantityLine}
             </div>
         </div>
