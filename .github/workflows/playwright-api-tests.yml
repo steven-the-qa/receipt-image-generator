@@ -1,4 +1,3 @@
-## Waiting until I have the full API test framework before including this one
 name: Playwright API Tests
 
 env:
