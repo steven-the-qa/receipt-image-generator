@@ -45,7 +45,7 @@ jobs:
           node-version: '20'
 
       - name: Install dependencies
-        run: npm i
+        run: npm ci
 
       - name: Install Playwright Browsers
         run: npx playwright install --with-deps --no-shell
@@ -64,7 +64,7 @@ jobs:
         id: ui_tests
         env:
           FORCE_COLOR: 1
-          SLACK_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+          SLACK_TOKEN: ${{ secrets.SLACK_TOKEN }}
           REPO: ${{ github.repository }}
           BRANCH: ${{ github.ref_name }}
           AUTHOR: ${{ github.triggering_actor }}
