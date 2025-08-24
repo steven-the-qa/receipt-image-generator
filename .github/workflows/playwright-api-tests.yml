@@ -12,6 +12,11 @@ jobs:
     timeout-minutes: 30
     runs-on: ubuntu-latest
 
+    permissions:
+      packages: read
+      contents: read
+      actions: read
+
     services:
       redis:
         image: redis

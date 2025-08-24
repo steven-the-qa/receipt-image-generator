@@ -9,20 +9,27 @@ on:
 
 jobs:
   playwright:
-    timeout-minutes: 45
+    timeout-minutes: 10
     strategy:
       fail-fast: false
       matrix:
-        browser: [chrome, safari]
+        browser: [chrome, safari, firefox]
         shardIndex: [1, 2]
         shardTotal: [2]
         include:
           - browser: chrome
             retries: 2
           - browser: safari
-            retries: 4
+            retries: 2
+          - browser: firefox
+            retries: 2
     name: ${{ matrix.browser }}_${{ matrix.shardIndex }}
     runs-on: ubuntu-latest
+
+    permissions:
+      packages: read
+      contents: read
+      actions: read
 
     services:
       redis:
