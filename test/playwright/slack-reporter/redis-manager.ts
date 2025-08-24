@@ -67,7 +67,13 @@ export class RedisManager {
                     console.warn("[Slack Reporter] Invalid state structure in Redis");
                     return null;
                 }
-
+                console.log("[Slack Reporter] Redis read state", {
+                    failureCount: parsedState?.testState?.failureCount,
+                    isInAggregationMode: parsedState?.testState?.isInAggregationMode,
+                    failures: parsedState?.aggregatedFailures?.failures?.length,
+                    browser: parsedState?.aggregatedFailures?.browser,
+                    shardIndex: parsedState?.aggregatedFailures?.shardIndex,
+                });
                 return parsedState;
             } catch (error) {
                 const isLastAttempt = attempt === retries - 1;
@@ -85,7 +91,7 @@ export class RedisManager {
         if (state) {
             return state;
         }
-
+        console.log("[Slack Reporter] Redis state missing, returning default state");
         return {
             testState: {
                 failureCount: 0,
@@ -183,6 +189,14 @@ export class RedisManager {
                     metadata: { ...currentState.metadata, ...state.metadata },
                 };
 
+                console.log("[Slack Reporter] Redis merge", {
+                    currentFailureCount: currentState.testState.failureCount,
+                    incomingFailureCount: state.testState.failureCount,
+                    mergedFailureCount: mergedState.testState.failureCount,
+                    isInAggregationMode: mergedState.testState.isInAggregationMode,
+                    failures: mergedState.aggregatedFailures.failures.length,
+                });
+
                 // Log the merge results for debugging
                 // console.log("[Slack Reporter] Merged state:", {
                 //     currentTestState: currentState.testState,
@@ -221,6 +235,11 @@ export class RedisManager {
                     throw setError;
                 }
 
+                console.log("[Slack Reporter] Redis write success", {
+                    failureCount: serializedState.testState.failureCount,
+                    isInAggregationMode: serializedState.testState.isInAggregationMode,
+                    failures: serializedState.aggregatedFailures.failures.length,
+                });
                 return true;
             } catch (error) {
                 const isLastAttempt = attempt === retries - 1;
@@ -277,6 +296,14 @@ export class RedisManager {
             };
         }
 
-        return state as ShardState;
+        const ensured = state as ShardState;
+        console.log("[Slack Reporter] ensureStateInitialized", {
+            failureCount: ensured.testState.failureCount,
+            isInAggregationMode: ensured.testState.isInAggregationMode,
+            browser: ensured.aggregatedFailures.browser,
+            shardIndex: ensured.aggregatedFailures.shardIndex,
+            shardTotal: ensured.aggregatedFailures.shardTotal,
+        });
+        return ensured;
     }
 }

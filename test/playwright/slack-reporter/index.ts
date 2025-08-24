@@ -67,6 +67,10 @@ class SlackReporter implements Reporter {
 
         // Set local instance state based on test state
         this.isInAggregationMode = initializedState.testState.isInAggregationMode;
+        console.log("[Slack Reporter] onBegin", {
+            failureCount: initializedState.testState.failureCount,
+            isInAggregationMode: initializedState.testState.isInAggregationMode,
+        });
         await this.redisManager.updateShardState(initializedState);
     }
 
@@ -93,7 +97,9 @@ class SlackReporter implements Reporter {
         const initializedState = this.redisManager.ensureStateInitialized(state, browser, shardIndex, shardTotal);
 
         // Increment this shard's failure count
+        const before = initializedState.testState.failureCount;
         initializedState.testState.failureCount++;
+        console.log("[Slack Reporter] onTestEnd increment", { before, after: initializedState.testState.failureCount });
 
         const fileName = test.location.file.split("/").pop() || "";
         const isApiTest = projectName === "api";
@@ -172,6 +178,10 @@ class SlackReporter implements Reporter {
         // Update state with latest info
         state.lastUpdate = Date.now();
         await this.redisManager.updateShardState(state);
+        console.log("[Slack Reporter] onEnd updated state", {
+            failureCount: state.testState?.failureCount,
+            isInAggregationMode: state.testState?.isInAggregationMode,
+        });
     }
 }
 
