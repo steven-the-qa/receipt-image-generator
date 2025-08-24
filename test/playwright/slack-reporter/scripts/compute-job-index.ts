@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-type SupportedBrowser = "chrome" | "safari" | "firefox";
+    type SupportedBrowser = "chrome" | "safari" | "firefox";
 
 function getBrowserIndex(browser: SupportedBrowser): number {
     const order: Record<SupportedBrowser, number> = {

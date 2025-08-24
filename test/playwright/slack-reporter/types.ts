@@ -42,4 +42,4 @@ export interface GithubSlackMap {
     [username: string]: string;
 }
 
-export type ShardBrowser = "chrome" | "safari" | "none";
+export type ShardBrowser = "chrome" | "safari" | "firefox" | "none";
