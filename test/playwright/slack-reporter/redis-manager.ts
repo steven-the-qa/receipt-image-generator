@@ -154,7 +154,10 @@ export class RedisManager {
                     testState: {
                         ...currentState.testState,
                         ...state.testState,
-                        failureCount: Math.max(currentState.testState.failureCount, state.testState.failureCount),
+                        failureCount:
+                            state.testState.failureCount >= currentState.testState.failureCount
+                                ? state.testState.failureCount
+                                : currentState.testState.failureCount,
                         isInAggregationMode:
                             currentState.testState.isInAggregationMode || state.testState.isInAggregationMode,
                     },

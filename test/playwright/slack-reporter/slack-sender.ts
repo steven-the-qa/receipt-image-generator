@@ -31,14 +31,16 @@ export class SlackSender {
                 const status = error?.code || error?.data?.error || error?.statusCode || "unknown";
                 const retryAfterHeader = Number(error?.data?.retryAfter || error?.headers?.["retry-after"]);
                 const isRateLimited = status === 429 || status === "ratelimited" || error?.data?.error === "ratelimited";
+                const isTransient = isRateLimited || status === "ETIMEDOUT" || status === "ECONNRESET" || status === "socket hang up";
 
-                if (isRateLimited && attempt < maxAttempts) {
+                if (isTransient && attempt < maxAttempts) {
                     const waitMs = Number.isFinite(retryAfterHeader)
                         ? Math.max(0, Math.floor(retryAfterHeader * 1000))
                         : Math.floor(baseDelayMs * Math.pow(1.6, attempt - 1) + Math.random() * 200);
-                    console.warn("[Slack Reporter] Rate limited, retrying postMessage", {
+                    console.warn("[Slack Reporter] Retrying postMessage", {
                         attempt,
                         waitMs,
+                        status,
                     });
                     await new Promise((r) => setTimeout(r, waitMs));
                     continue;
@@ -74,9 +76,14 @@ export class SlackSender {
             );
 
             const mainResponse = await this.postMessageWithRetry(mainMessage);
+            console.log("[Slack Reporter] parent posted", { ts: (mainResponse as any).ts, channel: (mainResponse as any).channel });
 
             if (mainResponse.ts) {
                 try {
+                    const stack = result.errors?.[0]?.stack || "No stack trace available";
+                    const clean = messageBuilder.stripAnsiCodes(stack);
+                    const fenced = "```" + messageBuilder.truncateString(clean, 1800) + "```";
+                    console.log("[Slack Reporter] thread payload sizes", { cleanLen: clean.length, fencedLen: fenced.length });
                     await this.postMessageWithRetry({
                         ...errorDetailsMessage,
                         thread_ts: mainResponse.ts,
@@ -94,6 +101,12 @@ export class SlackSender {
                             thread_ts: mainResponse.ts,
                         });
                     } else {
+                        console.warn("[Slack Reporter] thread post failed", {
+                            code: error?.code,
+                            apiError: error?.data?.error,
+                            status: error?.status,
+                            response_metadata: error?.data?.response_metadata,
+                        });
                         throw error;
                     }
                 }

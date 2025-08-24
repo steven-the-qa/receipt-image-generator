@@ -88,11 +88,7 @@ class SlackReporter implements Reporter {
             maxRetries: this.maxRetries,
             status: result.status,
         });
-        if (
-            !result.errors.length ||
-            !this.slackSender.isInitialized() ||
-            result.retry !== this.maxRetries
-        ) {
+        if (!result.errors.length || result.retry !== this.maxRetries) {
             console.log("[Slack Reporter] onTestEnd early-return");
             return;
         }
@@ -104,10 +100,7 @@ class SlackReporter implements Reporter {
         const state = await this.redisManager.getShardState();
         const initializedState = this.redisManager.ensureStateInitialized(state, browser, shardIndex, shardTotal);
 
-        // Increment this shard's failure count
-        const before = initializedState.testState.failureCount;
-        initializedState.testState.failureCount++;
-        console.log("[Slack Reporter] onTestEnd increment", { before, after: initializedState.testState.failureCount });
+        // Prepare aggregation buckets for this failure
 
         const fileName = test.location.file.split("/").pop() || "";
         const isApiTest = projectName === "api";
@@ -126,38 +119,45 @@ class SlackReporter implements Reporter {
             failure.ui++;
         }
 
+        // Update state with latest info and persist before attempting Slack send
+        initializedState.lastUpdate = Date.now();
+        const before = initializedState.testState.failureCount;
+        initializedState.testState.failureCount = before + 1;
+        console.log("[Slack Reporter] onTestEnd increment+persist", {
+            before,
+            after: initializedState.testState.failureCount,
+        });
+        await this.redisManager.updateShardState(initializedState);
+
+        // Now handle Slack send if client is ready
         if (initializedState.testState.failureCount > this.MAX_INDIVIDUAL_FAILURES) {
             // If this shard is entering aggregation mode for the first time
             if (!initializedState.testState.isInAggregationMode) {
                 initializedState.testState.isInAggregationMode = true;
                 this.isInAggregationMode = true;
                 console.log("[Slack Reporter] sending individual failure (aggregation notice)");
+                if (this.slackSender.isInitialized()) {
+                    await this.slackSender.sendIndividualFailure(
+                        test,
+                        result,
+                        true,
+                        this.MAX_INDIVIDUAL_FAILURES,
+                        this.getMessageBuilder()
+                    );
+                }
+            }
+        } else {
+            console.log("[Slack Reporter] sending individual failure (standard)");
+            if (this.slackSender.isInitialized()) {
                 await this.slackSender.sendIndividualFailure(
                     test,
                     result,
-                    true,
+                    false,
                     this.MAX_INDIVIDUAL_FAILURES,
                     this.getMessageBuilder()
                 );
             }
-        } else {
-            console.log("[Slack Reporter] sending individual failure (standard)");
-            await this.slackSender.sendIndividualFailure(
-                test,
-                result,
-                false,
-                this.MAX_INDIVIDUAL_FAILURES,
-                this.getMessageBuilder()
-            );
         }
-
-        // Update state with latest info
-        initializedState.lastUpdate = Date.now();
-        console.log("[Slack Reporter] onTestEnd writing state", {
-            failureCount: initializedState.testState.failureCount,
-            isInAggregationMode: initializedState.testState.isInAggregationMode,
-        });
-        await this.redisManager.updateShardState(initializedState);
     }
 
     async onEnd() {

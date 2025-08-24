@@ -74,19 +74,11 @@ export function buildIndividualFailureMessages(
                   ]
                 : []),
             {
-                type: "actions",
-                elements: [
-                    {
-                        type: "button",
-                        text: {
-                            type: "plain_text",
-                            text: "🔍 View Test Run",
-                            emoji: true,
-                        },
-                        style: "danger",
-                        url: builder.jobUrl,
-                    },
-                ],
+                type: "section",
+                text: {
+                    type: "mrkdwn",
+                    text: `🔍 <${builder.jobUrl}|View Test Run>`,
+                },
             },
         ],
     };
@@ -106,7 +98,7 @@ export function buildIndividualFailureMessages(
                 type: "section",
                 text: {
                     type: "mrkdwn",
-                    text: `\`\`\`${builder.truncateString(cleanStack || "No stack trace available", 2994)}\`\`\``,
+                    text: `\`\`\`${builder.truncateString(cleanStack || "No stack trace available", 1800)}\`\`\``,
                 },
             },
         ],

@@ -56,19 +56,11 @@ export function buildSummaryMessages(state: ShardState, builder: MessageBuilder)
                 ],
             },
             {
-                type: "actions",
-                elements: [
-                    {
-                        type: "button",
-                        text: {
-                            type: "plain_text",
-                            text: "🔍 View Test Run",
-                            emoji: true,
-                        },
-                        style: "danger",
-                        url: builder.jobUrl,
-                    },
-                ],
+                type: "section",
+                text: {
+                    type: "mrkdwn",
+                    text: `🔍 <${builder.jobUrl}|View Test Run>`,
+                },
             },
         ],
     };
