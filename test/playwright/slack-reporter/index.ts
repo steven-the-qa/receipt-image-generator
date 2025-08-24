@@ -73,25 +73,21 @@ class SlackReporter implements Reporter {
     async onTestEnd(test: TestCase, result: TestResult) {
         const projectName = test.parent.project()?.name;
 
-        // Report only when:
-        // - test did NOT pass (failed/timedOut/interrupted)
-        // - this is the last retry attempt
-        // - Slack client is initialized
+        // Determine failure and final attempt
         const failedOrTimedOut = result.status !== "passed";
         const isFinalAttempt = this.maxRetries === undefined ? true : result.retry === this.maxRetries;
 
-        if (!failedOrTimedOut || !this.slackSender.isInitialized() || !isFinalAttempt) {
+        if (!failedOrTimedOut || !isFinalAttempt) {
             return;
         }
 
-        // Get current shard state and ensure it's initialized
+        // Always persist failure counts on final failure, regardless of Slack init
         const browser = process.env.BROWSER || "none";
         const shardIndex = process.env.SHARD_INDEX || "0";
         const shardTotal = process.env.SHARD_TOTAL || "0";
         const state = await this.redisManager.getShardState();
         const initializedState = this.redisManager.ensureStateInitialized(state, browser, shardIndex, shardTotal);
 
-        // Increment this shard's failure count
         initializedState.testState.failureCount++;
 
         const fileName = test.location.file.split("/").pop() || "";
@@ -116,22 +112,26 @@ class SlackReporter implements Reporter {
             if (!initializedState.testState.isInAggregationMode) {
                 initializedState.testState.isInAggregationMode = true;
                 this.isInAggregationMode = true;
+                if (this.slackSender.isInitialized()) {
+                    await this.slackSender.sendIndividualFailure(
+                        test,
+                        result,
+                        true,
+                        this.MAX_INDIVIDUAL_FAILURES,
+                        this.getMessageBuilder()
+                    );
+                }
+            }
+        } else {
+            if (this.slackSender.isInitialized()) {
                 await this.slackSender.sendIndividualFailure(
                     test,
                     result,
-                    true,
+                    false,
                     this.MAX_INDIVIDUAL_FAILURES,
                     this.getMessageBuilder()
                 );
             }
-        } else {
-            await this.slackSender.sendIndividualFailure(
-                test,
-                result,
-                false,
-                this.MAX_INDIVIDUAL_FAILURES,
-                this.getMessageBuilder()
-            );
         }
 
         // Update state with latest info
