@@ -6,6 +6,11 @@ on:
   pull_request:
     branches: [ main ]
 
+permissions:
+  contents: read
+  actions: read
+  packages: read
+
 jobs:
 #   api-tests:
 #     uses: ./.github/workflows/playwright-api-tests.yml
