@@ -21,7 +21,10 @@ export default defineConfig({
     {
       name: 'chrome',
       testIgnore: 'api/**',
-      use: { ...devices['Desktop Chrome'] },
+      use: {
+        ...devices['Desktop Chrome'],
+        channel: 'chromium',
+      },
     },
     {
       name: 'firefox',
