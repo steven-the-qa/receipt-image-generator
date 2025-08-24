@@ -73,17 +73,14 @@ class SlackReporter implements Reporter {
     async onTestEnd(test: TestCase, result: TestResult) {
         const projectName = test.parent.project()?.name;
 
-        // Report if:
-        // 1. The test has failed/timedOut OR has cleanup errors
-        // 2. We're on the last retry
-        // 3. Slack client is initialized
-        // 4. Author is not graphite-app[bot]
-        if (
-            !result.errors.length ||
-            !this.slackSender.isInitialized() ||
-            result.retry !== this.maxRetries ||
-            this.author === "graphite-app[bot]"
-        ) {
+        // Report only when:
+        // - test did NOT pass (failed/timedOut/interrupted)
+        // - this is the last retry attempt
+        // - Slack client is initialized
+        const failedOrTimedOut = result.status !== "passed";
+        const isFinalAttempt = this.maxRetries === undefined ? true : result.retry === this.maxRetries;
+
+        if (!failedOrTimedOut || !this.slackSender.isInitialized() || !isFinalAttempt) {
             return;
         }
 

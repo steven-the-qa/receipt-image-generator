@@ -15,13 +15,11 @@ jobs:
         browser: [chrome, safari, firefox]
         shardIndex: [1, 2]
         shardTotal: [2]
+        retries: [2]
         include:
           - browser: chrome
-            retries: 2
           - browser: safari
-            retries: 2
           - browser: firefox
-            retries: 2
     name: ${{ matrix.browser }}_${{ matrix.shardIndex }}
     runs-on: ubuntu-latest
 
