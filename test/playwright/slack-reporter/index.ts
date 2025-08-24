@@ -81,11 +81,19 @@ class SlackReporter implements Reporter {
         // 1. The test has failed/timedOut OR has cleanup errors
         // 2. We're on the last retry
         // 3. Slack client is initialized
+        console.log("[Slack Reporter] onTestEnd gate", {
+            errors: result.errors.length,
+            slackInitialized: this.slackSender.isInitialized(),
+            retry: result.retry,
+            maxRetries: this.maxRetries,
+            status: result.status,
+        });
         if (
             !result.errors.length ||
             !this.slackSender.isInitialized() ||
             result.retry !== this.maxRetries
         ) {
+            console.log("[Slack Reporter] onTestEnd early-return");
             return;
         }
 
@@ -123,6 +131,7 @@ class SlackReporter implements Reporter {
             if (!initializedState.testState.isInAggregationMode) {
                 initializedState.testState.isInAggregationMode = true;
                 this.isInAggregationMode = true;
+                console.log("[Slack Reporter] sending individual failure (aggregation notice)");
                 await this.slackSender.sendIndividualFailure(
                     test,
                     result,
@@ -132,6 +141,7 @@ class SlackReporter implements Reporter {
                 );
             }
         } else {
+            console.log("[Slack Reporter] sending individual failure (standard)");
             await this.slackSender.sendIndividualFailure(
                 test,
                 result,
@@ -143,6 +153,10 @@ class SlackReporter implements Reporter {
 
         // Update state with latest info
         initializedState.lastUpdate = Date.now();
+        console.log("[Slack Reporter] onTestEnd writing state", {
+            failureCount: initializedState.testState.failureCount,
+            isInAggregationMode: initializedState.testState.isInAggregationMode,
+        });
         await this.redisManager.updateShardState(initializedState);
     }
 

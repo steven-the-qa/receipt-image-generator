@@ -123,6 +123,7 @@ export class RedisManager {
         for (let attempt = 0; attempt < retries; attempt++) {
             try {
                 // Start watching the key for changes
+                console.log("[Slack Reporter] Redis key", this.stateKey);
                 await this.redis.watch(this.stateKey);
 
                 // Get the current state
