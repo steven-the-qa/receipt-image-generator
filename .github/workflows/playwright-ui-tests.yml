@@ -67,10 +67,8 @@ jobs:
           SHARD_TOTAL: ${{ matrix.shardTotal }}
         run: |
           JOB_INDEX=$(npx -y tsx test/playwright/slack-reporter/scripts/compute-job-index.ts "$BROWSER" "$SHARD_INDEX" "$SHARD_TOTAL")
-
-          JOB_ID=$(gh api $JOBS_URL | jq --argjson idx "$JOB_INDEX" '[
-            .jobs[] | select(.name | contains("Playwright Tests"))
-          ][$idx].id')
+          TARGET_NAME="${BROWSER}_${SHARD_INDEX}"
+          JOB_ID=$(gh api $JOBS_URL | jq -r --arg name "$TARGET_NAME" '[.jobs[] | select(.name | contains($name))][0].id')
           echo "job_id=$JOB_ID" >> $GITHUB_OUTPUT
 
       - name: Run UI tests
