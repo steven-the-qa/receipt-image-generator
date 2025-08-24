@@ -1,7 +1,6 @@
 name: Playwright UI Tests
 
 env:
-  SLACK_TOKEN: ${{ secrets.SLACK_TOKEN }}
   REDIS_URL: redis://localhost:6379
 
 on:
@@ -62,17 +61,23 @@ jobs:
         id: get_job_id
         env:
           GH_TOKEN: ${{ github.token }}
-          JOB_INDEX: "${{ matrix.shardIndex > 1 && (matrix.browser == 'safari' && '3' || '1') || (matrix.browser == 'safari' && '2' || '0') }}"
           JOBS_URL: "/repos/${{ github.repository }}/actions/runs/${{ github.run_id }}/jobs"
+          BROWSER: ${{ matrix.browser }}
+          SHARD_INDEX: ${{ matrix.shardIndex }}
+          SHARD_TOTAL: ${{ matrix.shardTotal }}
         run: |
-          JOB_ID=$(gh api $JOBS_URL | jq --argjson idx "$JOB_INDEX" '[.jobs[] | select(.name | contains("Playwright Tests"))][$idx].id')
+          JOB_INDEX=$(npx -y tsx test/playwright/slack-reporter/scripts/compute-job-index.ts "$BROWSER" "$SHARD_INDEX" "$SHARD_TOTAL")
+
+          JOB_ID=$(gh api $JOBS_URL | jq --argjson idx "$JOB_INDEX" '[
+            .jobs[] | select(.name | contains("Playwright Tests"))
+          ][$idx].id')
           echo "job_id=$JOB_ID" >> $GITHUB_OUTPUT
 
       - name: Run UI tests
         id: ui_tests
         env:
           FORCE_COLOR: 1
-          SLACK_TOKEN: ${{ env.SLACK_TOKEN }}
+          SLACK_TOKEN: ${{ secrets.SLACK_TOKEN }}
           REPO: ${{ github.repository }}
           BRANCH: ${{ github.ref_name }}
           AUTHOR: ${{ github.triggering_actor }}
