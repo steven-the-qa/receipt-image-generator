@@ -14,6 +14,7 @@ permissions:
 jobs:
 #   api-tests:
 #     uses: ./.github/workflows/playwright-api-tests.yml
+#     secrets: inherit
 
   ui-tests:
     # needs: api-tests
