@@ -25,6 +25,7 @@ test('create a Walgreens receipt', async ({ page }) => {
 
   const receipt = page.getByTestId('receipt').first();
 
-  await expect(receipt).not.toContainText('Toothpaste');
+  await expect(receipt).toContainText('This should fail');
+  await expect(receipt).toContainText('Toothpaste');
   await expect(receipt.getByTestId('price')).toContainText('6.98');
 });

@@ -39,22 +39,12 @@ export class SlackSender {
 
             const mainResponse = await this.web!.chat.postMessage(mainMessage);
 
-            const threadTs = (mainResponse as any)?.ts as string | undefined;
-            const threadChannel = ((mainResponse as any)?.channel as string | undefined) ||
-                ((mainMessage as any)?.channel as string | undefined);
-
-            if (!threadTs) {
-                console.warn("[Slack Reporter] Main message posted without ts; skipping thread reply", {
-                    ok: (mainResponse as any)?.ok,
+            if (mainResponse.ts) {
+                await this.web!.chat.postMessage({
+                    ...errorDetailsMessage,
+                    thread_ts: mainResponse.ts,
                 });
-                return;
             }
-
-            await this.web!.chat.postMessage({
-                ...errorDetailsMessage,
-                channel: threadChannel || "#playwright-test-failures",
-                thread_ts: threadTs,
-            });
         } catch (error) {
             console.error("[Slack Reporter] Failed to send Slack message:", {
                 testTitle: test.title,

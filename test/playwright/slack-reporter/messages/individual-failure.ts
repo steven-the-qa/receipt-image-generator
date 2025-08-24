@@ -106,7 +106,7 @@ export function buildIndividualFailureMessages(
                 type: "section",
                 text: {
                     type: "mrkdwn",
-                    text: `\`\`\`${builder.truncateString(cleanStack || "No stack trace available", 3000)}\`\`\``,
+                    text: `\`\`\`${builder.truncateString(cleanStack || "No stack trace available", 2994)}\`\`\``,
                 },
             },
         ],
