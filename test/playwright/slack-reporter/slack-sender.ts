@@ -75,19 +75,25 @@ export class SlackSender {
                 messageBuilder
             );
 
+            console.log("[Slack Reporter] posting parent message");
             const mainResponse = await this.postMessageWithRetry(mainMessage);
-            console.log("[Slack Reporter] parent posted", { ts: (mainResponse as any).ts, channel: (mainResponse as any).channel });
+            const parentTs = (mainResponse as any).ts;
+            const parentChannel = (mainResponse as any).channel;
+            console.log("[Slack Reporter] parent posted", { ts: parentTs, channel: parentChannel });
 
-            if (mainResponse.ts) {
+            if (parentTs) {
                 try {
                     const stack = result.errors?.[0]?.stack || "No stack trace available";
                     const clean = messageBuilder.stripAnsiCodes(stack);
                     const fenced = "```" + messageBuilder.truncateString(clean, 1800) + "```";
                     console.log("[Slack Reporter] thread payload sizes", { cleanLen: clean.length, fencedLen: fenced.length });
+                    console.log("[Slack Reporter] posting thread reply");
                     await this.postMessageWithRetry({
                         ...errorDetailsMessage,
-                        thread_ts: mainResponse.ts,
+                        channel: parentChannel || (errorDetailsMessage as any).channel,
+                        thread_ts: parentTs,
                     });
+                    console.log("[Slack Reporter] thread reply posted");
                 } catch (error: any) {
                     const errCode = error?.data?.error || error?.code;
                     // Fallback for oversized/invalid blocks in free orgs
@@ -96,10 +102,11 @@ export class SlackSender {
                         const clean = messageBuilder.stripAnsiCodes(stack);
                         const fallback = messageBuilder.truncateString(clean, 1800);
                         await this.postMessageWithRetry({
-                            channel: (errorDetailsMessage as any).channel,
+                            channel: parentChannel || (errorDetailsMessage as any).channel,
                             text: "Test Failure Details\n```" + fallback + "```",
-                            thread_ts: mainResponse.ts,
+                            thread_ts: parentTs,
                         });
+                        console.log("[Slack Reporter] thread fallback posted (text)");
                     } else {
                         console.warn("[Slack Reporter] thread post failed", {
                             code: error?.code,
@@ -107,7 +114,25 @@ export class SlackSender {
                             status: error?.status,
                             response_metadata: error?.data?.response_metadata,
                         });
-                        throw error;
+                        // Fallback for any other error as plain text, to maximize reliability
+                        try {
+                            const stack = result.errors?.[0]?.stack || "No stack trace available";
+                            const clean = messageBuilder.stripAnsiCodes(stack);
+                            const fallback = messageBuilder.truncateString(clean, 1200);
+                            await this.postMessageWithRetry({
+                                channel: parentChannel || (errorDetailsMessage as any).channel,
+                                text: "Test Failure Details\n```" + fallback + "```",
+                                thread_ts: parentTs,
+                            });
+                            console.log("[Slack Reporter] thread fallback posted (generic)");
+                        } catch (fallbackError: any) {
+                            console.warn("[Slack Reporter] thread fallback failed", {
+                                code: fallbackError?.code,
+                                apiError: fallbackError?.data?.error,
+                                status: fallbackError?.status,
+                                response_metadata: fallbackError?.data?.response_metadata,
+                            });
+                        }
                     }
                 }
             }
