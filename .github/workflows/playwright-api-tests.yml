@@ -49,6 +49,7 @@ jobs:
         env:
           FORCE_COLOR: 1
           SLACK_TOKEN: ${{ secrets.SLACK_TOKEN }}
+          GITHUB_SLACK_USER_MAP: ${{ secrets.GITHUB_SLACK_USER_MAP }}
           REPO: ${{ github.repository }}
           BRANCH: ${{ github.ref_name }}
           AUTHOR: ${{ github.triggering_actor }}

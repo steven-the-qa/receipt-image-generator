@@ -1,7 +1,6 @@
 import type { GithubSlackMap } from "./types";
-import githubSlackUserMap from "./github-slack-user-map.json";
 
-const userMap: GithubSlackMap = githubSlackUserMap;
+const userMap: GithubSlackMap = JSON.parse(process.env.GITHUB_SLACK_USER_MAP || "{}") as GithubSlackMap;
 
 export function truncateString(str: string, maxLength: number): string {
     if (str.length <= maxLength) {
