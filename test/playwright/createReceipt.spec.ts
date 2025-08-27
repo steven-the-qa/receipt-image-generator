@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 
 test('create a Walgreens receipt', async ({ page }) => {
-  await page.goto('http://localhost:3000/');
+  await page.goto('/');
 
   const storeNameDropdownTrigger = page.locator('#storeSelect svg')
   await storeNameDropdownTrigger.click();
