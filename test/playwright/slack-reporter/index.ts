@@ -3,6 +3,9 @@ import { getShardContext, getSlackUserMention, stripAnsiCodes, truncateString } 
 import { RedisManager } from "./redis-manager";
 import { SlackSender } from "./slack-sender";
 
+const DEBUG = process.env.SLACK_REPORTER_DEBUG === '1' || process.env.SLACK_REPORTER_DEBUG === 'true';
+const dlog = (...args: any[]) => { if (DEBUG) console.log(...args); };
+
 class SlackReporter implements Reporter {
     private slackSender: SlackSender;
     private redisManager: RedisManager;
@@ -67,7 +70,7 @@ class SlackReporter implements Reporter {
 
         // Set local instance state based on test state
         this.isInAggregationMode = initializedState.testState.isInAggregationMode;
-        console.log("[Slack Reporter] onBegin", {
+        dlog("[Slack Reporter] onBegin", {
             failureCount: initializedState.testState.failureCount,
             isInAggregationMode: initializedState.testState.isInAggregationMode,
         });
@@ -81,7 +84,7 @@ class SlackReporter implements Reporter {
         // 1. The test has failed/timedOut OR has cleanup errors
         // 2. We're on the last retry
         // 3. Slack client is initialized
-        console.log("[Slack Reporter] onTestEnd gate", {
+        dlog("[Slack Reporter] onTestEnd gate", {
             errors: result.errors.length,
             slackInitialized: this.slackSender.isInitialized(),
             retry: result.retry,
@@ -89,7 +92,7 @@ class SlackReporter implements Reporter {
             status: result.status,
         });
         if (!result.errors.length || result.retry !== this.maxRetries) {
-            console.log("[Slack Reporter] onTestEnd early-return");
+            dlog("[Slack Reporter] onTestEnd early-return");
             return;
         }
 
@@ -123,7 +126,7 @@ class SlackReporter implements Reporter {
         initializedState.lastUpdate = Date.now();
         const before = initializedState.testState.failureCount;
         initializedState.testState.failureCount = before + 1;
-        console.log("[Slack Reporter] onTestEnd increment+persist", {
+        dlog("[Slack Reporter] onTestEnd increment+persist", {
             before,
             after: initializedState.testState.failureCount,
         });
@@ -135,7 +138,7 @@ class SlackReporter implements Reporter {
             if (!initializedState.testState.isInAggregationMode) {
                 initializedState.testState.isInAggregationMode = true;
                 this.isInAggregationMode = true;
-                console.log("[Slack Reporter] sending individual failure (aggregation notice)");
+                dlog("[Slack Reporter] sending individual failure (aggregation notice)");
                 if (this.slackSender.isInitialized()) {
                     await this.slackSender.sendIndividualFailure(
                         test,
@@ -147,7 +150,7 @@ class SlackReporter implements Reporter {
                 }
             }
         } else {
-            console.log("[Slack Reporter] sending individual failure (standard)");
+            dlog("[Slack Reporter] sending individual failure (standard)");
             if (this.slackSender.isInitialized()) {
                 await this.slackSender.sendIndividualFailure(
                     test,
@@ -169,7 +172,7 @@ class SlackReporter implements Reporter {
                 failureCount: Math.max(state.testState.failureCount, 0),
                 isInAggregationMode: true,
             });
-            console.log("[Slack Reporter] Recording aggregation mode for shard:", {
+            dlog("[Slack Reporter] Recording aggregation mode for shard:", {
                 testState: state.testState,
             });
         }
@@ -180,10 +183,10 @@ class SlackReporter implements Reporter {
         const shouldSendSummary = state.testState?.failureCount > 0 && state.testState?.isInAggregationMode;
 
         if (shouldSendSummary) {
-            console.log("[Slack Reporter] Sending summary for completed tests");
+            dlog("[Slack Reporter] Sending summary for completed tests");
             await this.slackSender.sendSummary(state, this.getMessageBuilder());
         } else {
-            console.log("[Slack Reporter] Not sending summary, conditions not met:", {
+            dlog("[Slack Reporter] Not sending summary, conditions not met:", {
                 failureCount: state.testState?.failureCount,
                 isInAggregationMode: state.testState?.isInAggregationMode,
             });
@@ -192,7 +195,7 @@ class SlackReporter implements Reporter {
         // Update state with latest info
         state.lastUpdate = Date.now();
         await this.redisManager.updateShardState(state);
-        console.log("[Slack Reporter] onEnd updated state", {
+        dlog("[Slack Reporter] onEnd updated state", {
             failureCount: state.testState?.failureCount,
             isInAggregationMode: state.testState?.isInAggregationMode,
         });

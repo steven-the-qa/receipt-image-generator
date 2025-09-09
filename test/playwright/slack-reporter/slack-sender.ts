@@ -4,6 +4,9 @@ import { buildIndividualFailureMessages } from "./messages/individual-failure";
 import { buildSummaryMessages } from "./messages/summary";
 import type { MessageBuilder, ShardState } from "./types";
 
+const DEBUG = process.env.SLACK_REPORTER_DEBUG === '1' || process.env.SLACK_REPORTER_DEBUG === 'true';
+const dlog = (...args: any[]) => { if (DEBUG) console.log(...args); };
+
 export class SlackSender {
     private web: WebClient | null = null;
 
@@ -37,7 +40,7 @@ export class SlackSender {
                     const waitMs = Number.isFinite(retryAfterHeader)
                         ? Math.max(0, Math.floor(retryAfterHeader * 1000))
                         : Math.floor(baseDelayMs * Math.pow(1.6, attempt - 1) + Math.random() * 200);
-                    console.warn("[Slack Reporter] Retrying postMessage", {
+                    if (DEBUG) console.warn("[Slack Reporter] Retrying postMessage", {
                         attempt,
                         waitMs,
                         status,
@@ -75,25 +78,25 @@ export class SlackSender {
                 messageBuilder
             );
 
-            console.log("[Slack Reporter] posting parent message");
+            dlog("[Slack Reporter] posting parent message");
             const mainResponse = await this.postMessageWithRetry(mainMessage);
             const parentTs = (mainResponse as any).ts;
             const parentChannel = (mainResponse as any).channel;
-            console.log("[Slack Reporter] parent posted", { ts: parentTs, channel: parentChannel });
+            dlog("[Slack Reporter] parent posted", { ts: parentTs, channel: parentChannel });
 
             if (parentTs) {
                 try {
                     const stack = result.errors?.[0]?.stack || "No stack trace available";
                     const clean = messageBuilder.stripAnsiCodes(stack);
                     const fenced = "```" + messageBuilder.truncateString(clean, 1800) + "```";
-                    console.log("[Slack Reporter] thread payload sizes", { cleanLen: clean.length, fencedLen: fenced.length });
-                    console.log("[Slack Reporter] posting thread reply");
+                    dlog("[Slack Reporter] thread payload sizes", { cleanLen: clean.length, fencedLen: fenced.length });
+                    dlog("[Slack Reporter] posting thread reply");
                     await this.postMessageWithRetry({
                         ...errorDetailsMessage,
                         channel: parentChannel || (errorDetailsMessage as any).channel,
                         thread_ts: parentTs,
                     });
-                    console.log("[Slack Reporter] thread reply posted");
+                    dlog("[Slack Reporter] thread reply posted");
                 } catch (error: any) {
                     const errCode = error?.data?.error || error?.code;
                     // Fallback for oversized/invalid blocks in free orgs
@@ -106,9 +109,9 @@ export class SlackSender {
                             text: "Test Failure Details\n```" + fallback + "```",
                             thread_ts: parentTs,
                         });
-                        console.log("[Slack Reporter] thread fallback posted (text)");
+                        dlog("[Slack Reporter] thread fallback posted (text)");
                     } else {
-                        console.warn("[Slack Reporter] thread post failed", {
+                        if (DEBUG) console.warn("[Slack Reporter] thread post failed", {
                             code: error?.code,
                             apiError: error?.data?.error,
                             status: error?.status,
@@ -124,9 +127,9 @@ export class SlackSender {
                                 text: "Test Failure Details\n```" + fallback + "```",
                                 thread_ts: parentTs,
                             });
-                            console.log("[Slack Reporter] thread fallback posted (generic)");
+                            dlog("[Slack Reporter] thread fallback posted (generic)");
                         } catch (fallbackError: any) {
-                            console.warn("[Slack Reporter] thread fallback failed", {
+                            if (DEBUG) console.warn("[Slack Reporter] thread fallback failed", {
                                 code: fallbackError?.code,
                                 apiError: fallbackError?.data?.error,
                                 status: fallbackError?.status,
@@ -137,7 +140,7 @@ export class SlackSender {
                 }
             }
         } catch (error) {
-            console.error("[Slack Reporter] Failed to send Slack message:", {
+            if (DEBUG) console.error("[Slack Reporter] Failed to send Slack message:", {
                 testTitle: test.title,
                 testStatus: result.status,
                 error: error instanceof Error ? error.message : error,

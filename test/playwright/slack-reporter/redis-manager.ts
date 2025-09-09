@@ -1,6 +1,9 @@
 import Redis from "ioredis";
 import type { ShardState } from "./types";
 
+const DEBUG = process.env.SLACK_REPORTER_DEBUG === '1' || process.env.SLACK_REPORTER_DEBUG === 'true';
+const dlog = (...args: any[]) => { if (DEBUG) console.log(...args); };
+
 export class RedisManager {
     private redis: Redis | null = null;
     private readonly stateKey: string;
@@ -31,11 +34,11 @@ export class RedisManager {
         });
 
         this.redis.on("error", (error) => {
-            console.error("[Slack Reporter] Redis error:", error);
+            if (DEBUG) console.error("[Slack Reporter] Redis error:", error);
         });
 
         this.redis.on("connect", () => {
-            console.log("[Slack Reporter] Connected to Redis");
+            dlog("[Slack Reporter] Connected to Redis");
         });
     }
 
@@ -64,10 +67,10 @@ export class RedisManager {
 
                 const parsedState = JSON.parse(state);
                 if (!this.validateShardState(parsedState)) {
-                    console.warn("[Slack Reporter] Invalid state structure in Redis");
+                    // console.warn("[Slack Reporter] Invalid state structure in Redis");
                     return null;
                 }
-                console.log("[Slack Reporter] Redis read state", {
+                dlog("[Slack Reporter] Redis read state", {
                     failureCount: parsedState?.testState?.failureCount,
                     isInAggregationMode: parsedState?.testState?.isInAggregationMode,
                     failures: parsedState?.aggregatedFailures?.failures?.length,
@@ -77,7 +80,7 @@ export class RedisManager {
                 return parsedState;
             } catch (error) {
                 const isLastAttempt = attempt === retries - 1;
-                console.warn(`[Slack Reporter] Failed to read shard state (attempt ${attempt + 1}/${retries}):`, error);
+                if (DEBUG) console.warn(`[Slack Reporter] Failed to read shard state (attempt ${attempt + 1}/${retries}):`, error);
                 if (!isLastAttempt) {
                     await new Promise((resolve) => setTimeout(resolve, Math.min((attempt + 1) * 100, 1000)));
                 }
@@ -91,7 +94,7 @@ export class RedisManager {
         if (state) {
             return state;
         }
-        console.log("[Slack Reporter] Redis state missing, returning default state");
+        dlog("[Slack Reporter] Redis state missing, returning default state");
         return {
             testState: {
                 failureCount: 0,
@@ -123,7 +126,7 @@ export class RedisManager {
         for (let attempt = 0; attempt < retries; attempt++) {
             try {
                 // Start watching the key for changes
-                console.log("[Slack Reporter] Redis key", this.stateKey);
+                dlog("[Slack Reporter] Redis key", this.stateKey);
                 await this.redis.watch(this.stateKey);
 
                 // Get the current state
@@ -193,7 +196,7 @@ export class RedisManager {
                     metadata: { ...currentState.metadata, ...state.metadata },
                 };
 
-                console.log("[Slack Reporter] Redis merge", {
+                dlog("[Slack Reporter] Redis merge", {
                     currentFailureCount: currentState.testState.failureCount,
                     incomingFailureCount: state.testState.failureCount,
                     mergedFailureCount: mergedState.testState.failureCount,
@@ -226,7 +229,7 @@ export class RedisManager {
                 const results = await multi.exec();
 
                 if (!results) {
-                    console.warn(
+                    if (DEBUG) console.warn(
                         `[Slack Reporter] Transaction failed due to concurrent modification (attempt ${
                             attempt + 1
                         }/${retries})`
@@ -239,7 +242,7 @@ export class RedisManager {
                     throw setError;
                 }
 
-                console.log("[Slack Reporter] Redis write success", {
+                dlog("[Slack Reporter] Redis write success", {
                     failureCount: serializedState.testState.failureCount,
                     isInAggregationMode: serializedState.testState.isInAggregationMode,
                     failures: serializedState.aggregatedFailures.failures.length,
@@ -247,7 +250,7 @@ export class RedisManager {
                 return true;
             } catch (error) {
                 const isLastAttempt = attempt === retries - 1;
-                console.warn(
+                if (DEBUG) console.warn(
                     `[Slack Reporter] Failed to write shard state (attempt ${attempt + 1}/${retries}):`,
                     error
                 );
@@ -265,7 +268,7 @@ export class RedisManager {
     async updateShardState(state: ShardState): Promise<void> {
         const success = await this.updateShardStateWithRetry(state);
         if (!success) {
-            console.error("[Slack Reporter] Failed to update shard state after all retries");
+            if (DEBUG) console.error("[Slack Reporter] Failed to update shard state after all retries");
         }
     }
 
@@ -301,7 +304,7 @@ export class RedisManager {
         }
 
         const ensured = state as ShardState;
-        console.log("[Slack Reporter] ensureStateInitialized", {
+        dlog("[Slack Reporter] ensureStateInitialized", {
             failureCount: ensured.testState.failureCount,
             isInAggregationMode: ensured.testState.isInAggregationMode,
             browser: ensured.aggregatedFailures.browser,
