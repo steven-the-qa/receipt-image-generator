@@ -1,3 +1,4 @@
+.env
 node_modules/**
 build/**
 .DS_Store
@@ -8,3 +9,6 @@ package-lock.json
 /playwright-report/
 /blob-report/
 /playwright/.cache/
+
+# Jest
+/coverage/
