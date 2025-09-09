@@ -3,8 +3,6 @@ name: CI
 on:
   push:
     branches: [ main ]
-  pull_request:
-    branches: [ main ]
 
 permissions:
   contents: read
@@ -12,6 +10,10 @@ permissions:
   packages: read
 
 jobs:
+  jest-tests:
+    uses: ./.github/workflows/jest.yml
+    secrets: inherit
+
 #   api-tests:
 #     uses: ./.github/workflows/playwright-api-tests.yml
 #     secrets: inherit

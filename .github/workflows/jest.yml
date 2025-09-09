@@ -1,0 +1,41 @@
+name: Jest Tests
+
+on:
+  workflow_call:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run unit tests (Jest)
+        run: npm run test:unit -- --ci --coverage
+        env:
+          CI: true
+
+      - name: Upload lcov.info
+        uses: actions/upload-artifact@v4
+        with:
+          name: jest-lcov-info
+          path: coverage/lcov.info
+          if-no-files-found: error
+
+      - name: Upload lcov HTML report
+        uses: actions/upload-artifact@v4
+        with:
+          name: jest-coverage-report
+          path: coverage/lcov-report
+          if-no-files-found: error
+
+
