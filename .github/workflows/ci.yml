@@ -14,11 +14,7 @@ jobs:
     uses: ./.github/workflows/jest.yml
     secrets: inherit
 
-#   api-tests:
-#     uses: ./.github/workflows/playwright-api-tests.yml
-#     secrets: inherit
-
   ui-tests:
-    # needs: api-tests
+    needs: jest-tests
     uses: ./.github/workflows/playwright-ui-tests.yml
     secrets: inherit
