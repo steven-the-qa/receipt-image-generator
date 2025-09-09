@@ -672,3 +672,6 @@ function formatStoreName(name) {
   return name.charAt(0).toUpperCase() + 
          name.slice(1).replace(/([A-Z])/g, ' $1');
 } 
+
+// Test-only export to allow direct unit testing of name formatting logic
+export { formatStoreName };
