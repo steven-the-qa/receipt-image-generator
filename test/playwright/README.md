@@ -18,7 +18,7 @@ npx playwright test --project=chrome    # or safari, firefox
   - Config: `playwright.config.ts` defines projects `chrome|safari|firefox|api` and launches the dev server on port 3000.
 
 ### Stagehand-assisted Playwright tests
-- **What**: AI-augmented browser actions via `@browserbasehq/stagehand` for high-level intent steps. See the <a href="https://docs.stagehand.dev/first-steps/introduction" target="_blank" rel="noopener noreferrer">Stagehand docs</a> for more information.
+- **What**: AI-augmented browser actions via `@browserbasehq/stagehand` for high-level intent steps. See the [Stagehand docs](https://docs.stagehand.dev/first-steps/introduction) for more information.
 - **Where**: `test/playwright/stagehand/createWalgreensReceipt.spec.ts` (skipped by default to avoid surprise AI spend).
 - **Enable and run (manual)**:
  
@@ -53,7 +53,7 @@ npx --no-save --no playwright test --project=chrome \
   - Summaries can aggregate UI/API shards.
 
 ### Custom Playwright API test framework
-- **What**: Chainable request builder with automatic status validation and rich error context (credit goes to Artem Bondar's <a href="https://www.bondaracademy.com/course/playwright-api-testing-mastery" target="_blank" rel="noopener noreferrer">Playwright API Testing Mastery course</a> for teaching this specific architecture).
+- **What**: Chainable request builder with automatic status validation and rich error context (credit goes to Artem Bondar's [Playwright API Testing Mastery course](https://www.bondaracademy.com/course/playwright-api-testing-mastery) for teaching this specific architecture).
 - **Where**: `test/playwright/api/utils/request-handler.ts`, `test/playwright/api/utils/logger.ts`.
 - **Defaults**: Base URL `http://localhost:3000/api` (override with `.url("https://...")`).
 - **Example**:
