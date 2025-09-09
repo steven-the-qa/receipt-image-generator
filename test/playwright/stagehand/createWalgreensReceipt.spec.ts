@@ -1,10 +1,12 @@
+import "dotenv/config";
 import { Stagehand } from "@browserbasehq/stagehand";
 import { test, expect } from '@playwright/test';
 
 test('create a Walgreens receipt', async () => {
   const stagehand = new Stagehand({
     env: "LOCAL"
-  })
+  });
+
   await stagehand.init();
   const sh = stagehand.page;
 
