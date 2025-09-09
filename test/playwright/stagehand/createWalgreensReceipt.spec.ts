@@ -2,7 +2,8 @@ import "dotenv/config";
 import { Stagehand } from "@browserbasehq/stagehand";
 import { test, expect } from '@playwright/test';
 
-test('create a Walgreens receipt', async () => {
+// Run on-demand to avoid unexpected AI bills
+test.skip('create a Walgreens receipt', async () => {
   const stagehand = new Stagehand({
     env: "LOCAL"
   });

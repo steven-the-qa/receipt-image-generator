@@ -74,11 +74,19 @@ export function buildIndividualFailureMessages(
                   ]
                 : []),
             {
-                type: "section",
-                text: {
-                    type: "mrkdwn",
-                    text: `🔍 <${builder.jobUrl}|View Test Run>`,
-                },
+                type: "actions",
+                elements: [
+                    {
+                        type: "button",
+                        text: {
+                            type: "plain_text",
+                            text: "🔍 View Test Run",
+                            emoji: true,
+                        },
+                        url: builder.jobUrl || "",
+                        style: "danger",
+                    },
+                ],
             },
         ],
     };
