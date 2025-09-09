@@ -17,5 +17,3 @@ module.exports = {
   coverageReporters: ['lcov', 'text', 'text-summary'],
   coverageDirectory: '<rootDir>/coverage',
 };
-
-

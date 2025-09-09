@@ -37,5 +37,3 @@ jobs:
           name: jest-coverage-report
           path: coverage/lcov-report
           if-no-files-found: error
-
-

@@ -23,5 +23,3 @@ describe('getStoreImageData', () => {
     expect(data.fallbackColor).toBe('#cccccc');
   });
 });
-
-
