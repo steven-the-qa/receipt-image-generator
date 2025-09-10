@@ -19,6 +19,10 @@
     "build": "react-scripts build",
     "predeploy": "REACT_APP_DEPLOY=true npm run build",
     "deploy": "gh-pages -d build",
+    "test:chrome": "npx playwright test --project=chrome",
+    "test:safari": "npx playwright test --project=safari",
+    "test:firefox": "npx playwright test --project=firefox",
+    "test:api": "npx playwright test --project=api",
     "test:e2e": "npx playwright test",
     "test:unit": "jest"
   },
