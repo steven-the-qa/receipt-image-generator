@@ -6,6 +6,7 @@ import { test, expect } from '@playwright/test';
 test('create a Walgreens receipt', async () => {
   const stagehand = new Stagehand({
     env: process.env.CI ? "BROWSERBASE" : "LOCAL",
+    // Browserbase API Key and Project ID are automatically pulled from the env
   });
 
   await stagehand.init();
