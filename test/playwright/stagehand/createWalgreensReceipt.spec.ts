@@ -3,7 +3,7 @@ import { Stagehand } from "@browserbasehq/stagehand";
 import { test, expect } from '@playwright/test';
 
 // Run on-demand to avoid unexpected AI bills
-test('create a Walgreens receipt', async () => {
+test.skip('create a Walgreens receipt', async () => {
   const stagehand = new Stagehand({
     env: process.env.CI ? "BROWSERBASE" : "LOCAL",
     apiKey: process.env.CI ? process.env.BROWSERBASE_API_KEY : undefined,
