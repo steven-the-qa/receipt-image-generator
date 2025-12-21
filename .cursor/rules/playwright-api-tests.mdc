@@ -1,0 +1,228 @@
+---
+globs: **/playwright/api/**/*.spec.ts
+alwaysApply: false
+---
+
+# Playwright API Tests Guidelines (Cursor Rules)
+
+Purpose: Enable AI to generate robust Playwright API tests that follow our framework and pass with minimal edits.
+
+## Hard Requirements
+
+-   Always import our extended fixtures:
+    ```ts
+    import { test } from "test/playwright/api/utils/fixtures";
+    import { expect } from "@playwright/test";
+    ```
+-   Always use `{ api }` fixture and provide an expected status:
+    ```ts
+    await api.path("/endpoint").getRequest(200);
+    ```
+-   Use `getApiUrl()` for base URLs; never hardcode:
+    ```ts
+    import { getApiUrl } from "test/playwright/api/config";
+    const magnusApiUrl = getApiUrl("magnusApi");
+    ```
+-   For authenticated flows, impersonate + login:
+    ```ts
+    import { createSession } from "test/playwright/api/helpers/createSession";
+    const user = await createTestUser();
+    await createSession(api, user.email);
+    ```
+-   Use factories for data; never import Prisma in tests. Register entities for cleanup when using feature fixtures and call `performCleanupIfNeeded()` in `afterEach`.
+-   Prefer type-safe responses by importing response types from app code (e.g., `@magnus/lib/.../types`).
+-   No defensive code in test bodies: no `if`, no `try/catch` for expected failures.
+
+## Request Builder
+
+Use this chain consistently:
+
+```ts
+api.url(getApiUrl("main")) // optional if default main
+    .path("/path")
+    .params({ key: "value" })
+    .headers({ "Content-Type": "application/json" })
+    .body({ any: "payload" })
+    .getRequest(200); // or post/put/patch/delete
+```
+
+## Recommended Test Shapes
+
+### Authentication
+
+```ts
+test.describe("GET /api/protected", () => {
+    test("401 without session", async ({ api }) => {
+        await api.path("/protected").getRequest(401);
+    });
+
+    test("200 with session", async ({ api }) => {
+        const user = await createTestUser();
+        await createSession(api, user.email);
+        await api.path("/protected").getRequest(200);
+    });
+});
+```
+
+### Validation (400 matrix)
+
+```ts
+test("POST /api/users validates required fields", async ({ api }) => {
+    await api.path("/users").body({}).postRequest(400);
+    await api.path("/users").body({ email: "invalid" }).postRequest(400);
+    await api
+        .path("/users")
+        .body({ email: "valid@example.com" })
+        .postRequest(201);
+});
+```
+
+### Filtering (create ALL variants; assert ALL results)
+
+```ts
+await createA();
+await createB();
+await createC();
+const res = await api.path("/entities").params({ type: "A" }).getRequest(200);
+for (const item of res.items) expect(item.type).toBe("A");
+```
+
+### Pagination
+
+```ts
+const p1 = await api
+    .path("/entities")
+    .params({ page: 1, limit: 5 })
+    .getRequest(200);
+const p2 = await api
+    .path("/entities")
+    .params({ page: 2, limit: 5 })
+    .getRequest(200);
+expect(p1.data).toHaveLength(5);
+expect(p2.data).toHaveLength(5);
+```
+
+### Access Control
+
+```ts
+// Emphasize 401/403 denials rather than repeating success
+await api.path("/admin").getRequest(401);
+await createSession(api, member.email);
+await api.path("/admin").getRequest(403);
+```
+
+### CRUD (templates)
+
+```ts
+// GET index
+test("GET /api/items returns paginated list", async ({ api }) => {
+    const res = await api
+        .path("/items")
+        .params({ page: 1, limit: 20 })
+        .getRequest(200);
+    expect(Array.isArray(res.data)).toBe(true);
+});
+
+// GET show (404)
+test("GET /api/items/:id returns 404 when not found", async ({ api }) => {
+    await api.path("/items/999999").getRequest(404);
+});
+
+// POST create (400 + 201)
+test("POST /api/items validates payload", async ({ api }) => {
+    await api.path("/items").body({}).postRequest(400);
+    const created = await api
+        .path("/items")
+        .body({ name: "X" })
+        .postRequest(201);
+    expect(created.data.id).toBeDefined();
+});
+
+// PUT/PATCH update
+test("PUT /api/items/:id updates", async ({ api }) => {
+    const created = await api
+        .path("/items")
+        .body({ name: "X" })
+        .postRequest(201);
+    const updated = await api
+        .path(`/items/${created.data.id}`)
+        .body({ name: "Y" })
+        .putRequest(200);
+    expect(updated.data.name).toBe("Y");
+});
+
+// DELETE destroy
+test("DELETE /api/items/:id returns 204", async ({ api }) => {
+    const created = await api
+        .path("/items")
+        .body({ name: "X" })
+        .postRequest(201);
+    await api.path(`/items/${created.data.id}`).deleteRequest(204);
+});
+```
+
+## Type Safety Pattern
+
+```ts
+import type { ListAssetsResponse } from "@magnus/lib/organization/assets/types";
+const magnusApiUrl = getApiUrl("magnusApi");
+const res: ListAssetsResponse = await api
+    .url(magnusApiUrl)
+    .path(`/organizations/${orgId}/projects/${projectId}/assets`)
+    .params({ type: UspAssetType.SmartContract })
+    .getRequest(200);
+```
+
+## Test Generation Best Practices
+
+### Scan for Redundancies
+
+Before finalizing generated tests, always scan for:
+
+-   **Duplicate test cases**: Multiple tests covering the exact same scenario with the same inputs
+-   **Redundant assertions**: Multiple tests asserting the same behavior in different ways
+-   **Overlapping validation**: Separate tests that could be combined into a single validation matrix
+-   **Repeated setup**: Identical fixture creation that could be extracted to `beforeEach`
+-   **Similar error cases**: Multiple 400/403/404 tests that differ only slightly
+
+**Example of redundancy to avoid:**
+
+```ts
+// ❌ Don't: Redundant tests
+test("returns 400 when name is missing", async ({ api }) => {
+    await api.path("/items").body({ description: "x" }).postRequest(400);
+});
+test("returns 400 when name is empty", async ({ api }) => {
+    await api.path("/items").body({ name: "" }).postRequest(400);
+});
+test("returns 400 for invalid payload", async ({ api }) => {
+    await api.path("/items").body({}).postRequest(400);
+});
+
+// ✅ Do: Combine into validation matrix
+test("POST /api/items validates required fields", async ({ api }) => {
+    await api.path("/items").body({}).postRequest(400);
+    await api.path("/items").body({ name: "" }).postRequest(400);
+    await api.path("/items").body({ description: "x" }).postRequest(400);
+    await api.path("/items").body({ name: "valid" }).postRequest(201);
+});
+```
+
+**Action**: After generating tests, review the entire test file to consolidate redundant tests and eliminate unnecessary duplication while maintaining comprehensive coverage.
+
+## Checklist (enforced mentally by AI)
+
+-   [ ] Test names include HTTP method and endpoint
+-   [ ] All requests specify expected status
+-   [ ] Base URL via `getApiUrl`
+-   [ ] Auth: cover 401 and 200 (if applicable)
+-   [ ] Validation: cover 400 and success
+-   [ ] Filtering: create all variants; assert every item
+-   [ ] Access control: emphasize denials (403)
+-   [ ] Response types imported and used
+-   [ ] Cleanup registered and performed if fixtures used
+-   [ ] **Scan for redundant tests and assertions before finalizing**
+
+## Reference
+
+See `API_TEST_GUIDE.md` for full context and examples.

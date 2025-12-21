@@ -11,7 +11,7 @@ describe('ItemSeeder utilities', () => {
 
     describe('productNameToUPC', () => {
         it('returns UPC for exact product name', () => {
-            const { name, upc } = sampleItems[0];
+            const { name, upc } = sampleItems[0]!;
             expect(productNameToUPC(name)).toBe(upc);
         });
 
@@ -46,9 +46,9 @@ describe('ItemSeeder utilities', () => {
             const count = 2;
             const cart = randomCart(count);
 
-            const first = sampleItems[0];
-            const expectedPrice = first.price[0].toFixed(2);
-            const expectedQty = first.qty[0].toFixed(0);
+            const first = sampleItems[0]!;
+            const expectedPrice = first.price[0]!.toFixed(2);
+            const expectedQty = first.qty[0]!.toFixed(0);
 
             expect(cart).toEqual([
                 [first.name, expectedPrice, expectedQty],
@@ -65,5 +65,3 @@ describe('ItemSeeder utilities', () => {
         });
     });
 });
-
-
