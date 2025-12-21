@@ -18,19 +18,27 @@ Purpose: Enable AI to generate robust Playwright API tests that follow our frame
     ```ts
     await api.path("/endpoint").getRequest(200);
     ```
--   Use `getApiUrl()` for base URLs; never hardcode:
+-   Base URL defaults to `http://localhost:3000/api`. Override with `.url()` if needed:
     ```ts
-    import { getApiUrl } from "test/playwright/api/config";
-    const magnusApiUrl = getApiUrl("magnusApi");
+    await api.url("http://localhost:8888/api").path("/endpoint").getRequest(200);
     ```
--   For authenticated flows, impersonate + login:
+-   For authenticated flows, register and login via API:
     ```ts
-    import { createSession } from "test/playwright/api/helpers/createSession";
-    const user = await createTestUser();
-    await createSession(api, user.email);
+    // Register a new user
+    await api.path("/auth-register").body({
+        email: "test@example.com",
+        username: "testuser",
+        password: "password123"
+    }).postRequest(200);
+    
+    // Login to get session cookie (automatically stored by RequestHandler)
+    await api.path("/auth-login").body({
+        email: "test@example.com",
+        password: "password123"
+    }).postRequest(200);
     ```
--   Use factories for data; never import Prisma in tests. Register entities for cleanup when using feature fixtures and call `performCleanupIfNeeded()` in `afterEach`.
--   Prefer type-safe responses by importing response types from app code (e.g., `@magnus/lib/.../types`).
+-   Create test data via API endpoints; clean up created entities in `afterEach` if needed.
+-   Prefer type-safe responses by importing response types from app code (e.g., `src/types/receipt.ts`).
 -   No defensive code in test bodies: no `if`, no `try/catch` for expected failures.
 
 ## Request Builder
@@ -38,12 +46,16 @@ Purpose: Enable AI to generate robust Playwright API tests that follow our frame
 Use this chain consistently:
 
 ```ts
-api.url(getApiUrl("main")) // optional if default main
-    .path("/path")
+api.path("/path") // Default base URL is http://localhost:3000/api
     .params({ key: "value" })
     .headers({ "Content-Type": "application/json" })
     .body({ any: "payload" })
-    .getRequest(200); // or post/put/patch/delete
+    .getRequest(200); // or post/put/delete
+
+// Override base URL if needed (e.g., for Netlify dev on port 8888)
+api.url("http://localhost:8888/api")
+    .path("/path")
+    .getRequest(200);
 ```
 
 ## Recommended Test Shapes
@@ -51,15 +63,27 @@ api.url(getApiUrl("main")) // optional if default main
 ### Authentication
 
 ```ts
-test.describe("GET /api/protected", () => {
+test.describe("GET /api/auth-me", () => {
     test("401 without session", async ({ api }) => {
-        await api.path("/protected").getRequest(401);
+        await api.path("/auth-me").getRequest(401);
     });
 
     test("200 with session", async ({ api }) => {
-        const user = await createTestUser();
-        await createSession(api, user.email);
-        await api.path("/protected").getRequest(200);
+        // Register and login
+        await api.path("/auth-register").body({
+            email: "test@example.com",
+            username: "testuser",
+            password: "password123"
+        }).postRequest(200);
+
+        await api.path("/auth-login").body({
+            email: "test@example.com",
+            password: "password123"
+        }).postRequest(200);
+
+        // Now authenticated
+        const user = await api.path("/auth-me").getRequest(200);
+        expect(user.email).toBe("test@example.com");
     });
 });
 ```
@@ -67,109 +91,230 @@ test.describe("GET /api/protected", () => {
 ### Validation (400 matrix)
 
 ```ts
-test("POST /api/users validates required fields", async ({ api }) => {
-    await api.path("/users").body({}).postRequest(400);
-    await api.path("/users").body({ email: "invalid" }).postRequest(400);
-    await api
-        .path("/users")
-        .body({ email: "valid@example.com" })
-        .postRequest(201);
+test("POST /api/auth-register validates required fields", async ({ api }) => {
+    await api.path("/auth-register").body({}).postRequest(400);
+    await api.path("/auth-register").body({ email: "invalid" }).postRequest(400);
+    await api.path("/auth-register").body({
+        email: "valid@example.com",
+        username: "testuser",
+        password: "password123"
+    }).postRequest(200);
+});
+
+test("POST /api/receipts validates required fields", async ({ api }) => {
+    // Login first
+    await api.path("/auth-login").body({
+        email: "test@example.com",
+        password: "password123"
+    }).postRequest(200);
+
+    await api.path("/receipts").body({}).postRequest(400);
+    await api.path("/receipts").body({ store_name: "Walmart" }).postRequest(400);
 });
 ```
 
 ### Filtering (create ALL variants; assert ALL results)
 
 ```ts
-await createA();
-await createB();
-await createC();
-const res = await api.path("/entities").params({ type: "A" }).getRequest(200);
-for (const item of res.items) expect(item.type).toBe("A");
+// Login first
+await api.path("/auth-login").body({
+    email: "test@example.com",
+    password: "password123"
+}).postRequest(200);
+
+// Create receipts with different favorite statuses
+const favoriteReceipt = await api.path("/receipts").body({
+    store_name: "Walmart",
+    purchase_date: "2024-01-15",
+    purchase_time: "14:30",
+    receipt_items: [],
+    subtotal: 10.99,
+    tax: 0.88,
+    total: 11.87,
+    is_favorite: true,
+    // ... other required fields
+}).postRequest(200);
+
+const regularReceipt = await api.path("/receipts").body({
+    store_name: "Target",
+    purchase_date: "2024-01-16",
+    purchase_time: "15:00",
+    receipt_items: [],
+    subtotal: 25.50,
+    tax: 2.04,
+    total: 27.54,
+    is_favorite: false,
+    // ... other required fields
+}).postRequest(200);
+
+// Filter by favorite
+const favorites = await api
+    .path("/receipts")
+    .params({ favorite: "true" })
+    .getRequest(200);
+
+// Assert all returned receipts are favorites
+for (const receipt of favorites) {
+    expect(receipt.is_favorite).toBe(true);
+}
 ```
 
-### Pagination
+### List Operations
 
 ```ts
-const p1 = await api
-    .path("/entities")
-    .params({ page: 1, limit: 5 })
-    .getRequest(200);
-const p2 = await api
-    .path("/entities")
-    .params({ page: 2, limit: 5 })
-    .getRequest(200);
-expect(p1.data).toHaveLength(5);
-expect(p2.data).toHaveLength(5);
+// Login first
+await api.path("/auth-login").body({
+    email: "test@example.com",
+    password: "password123"
+}).postRequest(200);
+
+// Create multiple receipts
+await api.path("/receipts").body({
+    store_name: "Walmart",
+    // ... required fields
+}).postRequest(200);
+
+await api.path("/receipts").body({
+    store_name: "Target",
+    // ... required fields
+}).postRequest(200);
+
+// Get all receipts
+const receipts = await api.path("/receipts").getRequest(200);
+expect(receipts.length).toBeGreaterThanOrEqual(2);
+expect(receipts.every(r => r.user_id)).toBeTruthy();
 ```
 
 ### Access Control
 
 ```ts
-// Emphasize 401/403 denials rather than repeating success
-await api.path("/admin").getRequest(401);
-await createSession(api, member.email);
-await api.path("/admin").getRequest(403);
+// Emphasize 401 denials for unauthenticated requests
+test("GET /api/receipts requires authentication", async ({ api }) => {
+    await api.path("/receipts").getRequest(401);
+});
+
+// Test user isolation - users can only access their own receipts
+test("users cannot access other users' receipts", async ({ api }) => {
+    // Login as user 1
+    await api.path("/auth-login").body({
+        email: "user1@example.com",
+        password: "password123"
+    }).postRequest(200);
+
+    const receipt1 = await api.path("/receipts").body({
+        store_name: "Walmart",
+        // ... required fields
+    }).postRequest(200);
+
+    // Logout
+    await api.path("/auth-logout").postRequest(200);
+
+    // Login as user 2
+    await api.path("/auth-login").body({
+        email: "user2@example.com",
+        password: "password123"
+    }).postRequest(200);
+
+    // User 2 cannot access user 1's receipt
+    await api.path(`/receipts/${receipt1.id}`).getRequest(404);
+});
 ```
 
 ### CRUD (templates)
 
 ```ts
 // GET index
-test("GET /api/items returns paginated list", async ({ api }) => {
-    const res = await api
-        .path("/items")
-        .params({ page: 1, limit: 20 })
-        .getRequest(200);
-    expect(Array.isArray(res.data)).toBe(true);
+test("GET /api/receipts returns user receipts", async ({ api }) => {
+    // Login first
+    await api.path("/auth-login").body({
+        email: "test@example.com",
+        password: "password123"
+    }).postRequest(200);
+
+    const receipts = await api.path("/receipts").getRequest(200);
+    expect(Array.isArray(receipts)).toBe(true);
 });
 
 // GET show (404)
-test("GET /api/items/:id returns 404 when not found", async ({ api }) => {
-    await api.path("/items/999999").getRequest(404);
+test("GET /api/receipts/:id returns 404 when not found", async ({ api }) => {
+    await api.path("/auth-login").body({
+        email: "test@example.com",
+        password: "password123"
+    }).postRequest(200);
+
+    await api.path("/receipts/00000000-0000-0000-0000-000000000000").getRequest(404);
 });
 
-// POST create (400 + 201)
-test("POST /api/items validates payload", async ({ api }) => {
-    await api.path("/items").body({}).postRequest(400);
-    const created = await api
-        .path("/items")
-        .body({ name: "X" })
-        .postRequest(201);
-    expect(created.data.id).toBeDefined();
+// POST create (400 + 200)
+test("POST /api/receipts validates payload", async ({ api }) => {
+    await api.path("/auth-login").body({
+        email: "test@example.com",
+        password: "password123"
+    }).postRequest(200);
+
+    await api.path("/receipts").body({}).postRequest(400);
+    const created = await api.path("/receipts").body({
+        store_name: "Walmart",
+        purchase_date: "2024-01-15",
+        purchase_time: "14:30",
+        receipt_items: [],
+        subtotal: 10.99,
+        tax: 0.88,
+        total: 11.87,
+        // ... other required fields
+    }).postRequest(200);
+    expect(created.id).toBeDefined();
 });
 
-// PUT/PATCH update
-test("PUT /api/items/:id updates", async ({ api }) => {
-    const created = await api
-        .path("/items")
-        .body({ name: "X" })
-        .postRequest(201);
+// PUT update
+test("PUT /api/receipts/:id updates", async ({ api }) => {
+    await api.path("/auth-login").body({
+        email: "test@example.com",
+        password: "password123"
+    }).postRequest(200);
+
+    const created = await api.path("/receipts").body({
+        store_name: "Walmart",
+        // ... required fields
+    }).postRequest(200);
+
     const updated = await api
-        .path(`/items/${created.data.id}`)
-        .body({ name: "Y" })
+        .path(`/receipts/${created.id}`)
+        .body({ receipt_name: "Updated Name", is_favorite: true })
         .putRequest(200);
-    expect(updated.data.name).toBe("Y");
+    expect(updated.receipt_name).toBe("Updated Name");
+    expect(updated.is_favorite).toBe(true);
 });
 
 // DELETE destroy
-test("DELETE /api/items/:id returns 204", async ({ api }) => {
-    const created = await api
-        .path("/items")
-        .body({ name: "X" })
-        .postRequest(201);
-    await api.path(`/items/${created.data.id}`).deleteRequest(204);
+test("DELETE /api/receipts/:id returns 204", async ({ api }) => {
+    await api.path("/auth-login").body({
+        email: "test@example.com",
+        password: "password123"
+    }).postRequest(200);
+
+    const created = await api.path("/receipts").body({
+        store_name: "Walmart",
+        // ... required fields
+    }).postRequest(200);
+
+    await api.path(`/receipts/${created.id}`).deleteRequest(204);
 });
 ```
 
 ## Type Safety Pattern
 
 ```ts
-import type { ListAssetsResponse } from "@magnus/lib/organization/assets/types";
-const magnusApiUrl = getApiUrl("magnusApi");
-const res: ListAssetsResponse = await api
-    .url(magnusApiUrl)
-    .path(`/organizations/${orgId}/projects/${projectId}/assets`)
-    .params({ type: UspAssetType.SmartContract })
+import type { Receipt } from "../../../src/types/receipt";
+
+// List receipts
+const receipts: Receipt[] = await api
+    .path("/receipts")
+    .getRequest(200);
+
+// Single receipt
+const receipt: Receipt = await api
+    .path(`/receipts/${receiptId}`)
     .getRequest(200);
 ```
 
@@ -189,22 +334,35 @@ Before finalizing generated tests, always scan for:
 
 ```ts
 // ❌ Don't: Redundant tests
-test("returns 400 when name is missing", async ({ api }) => {
-    await api.path("/items").body({ description: "x" }).postRequest(400);
+test("returns 400 when store_name is missing", async ({ api }) => {
+    await api.path("/receipts").body({ purchase_date: "2024-01-15" }).postRequest(400);
 });
-test("returns 400 when name is empty", async ({ api }) => {
-    await api.path("/items").body({ name: "" }).postRequest(400);
+test("returns 400 when purchase_date is missing", async ({ api }) => {
+    await api.path("/receipts").body({ store_name: "Walmart" }).postRequest(400);
 });
 test("returns 400 for invalid payload", async ({ api }) => {
-    await api.path("/items").body({}).postRequest(400);
+    await api.path("/receipts").body({}).postRequest(400);
 });
 
 // ✅ Do: Combine into validation matrix
-test("POST /api/items validates required fields", async ({ api }) => {
-    await api.path("/items").body({}).postRequest(400);
-    await api.path("/items").body({ name: "" }).postRequest(400);
-    await api.path("/items").body({ description: "x" }).postRequest(400);
-    await api.path("/items").body({ name: "valid" }).postRequest(201);
+test("POST /api/receipts validates required fields", async ({ api }) => {
+    await api.path("/auth-login").body({
+        email: "test@example.com",
+        password: "password123"
+    }).postRequest(200);
+
+    await api.path("/receipts").body({}).postRequest(400);
+    await api.path("/receipts").body({ store_name: "Walmart" }).postRequest(400);
+    await api.path("/receipts").body({
+        store_name: "Walmart",
+        purchase_date: "2024-01-15",
+        purchase_time: "14:30",
+        receipt_items: [],
+        subtotal: 10.99,
+        tax: 0.88,
+        total: 11.87,
+        // ... other required fields
+    }).postRequest(200);
 });
 ```
 
@@ -214,13 +372,13 @@ test("POST /api/items validates required fields", async ({ api }) => {
 
 -   [ ] Test names include HTTP method and endpoint
 -   [ ] All requests specify expected status
--   [ ] Base URL via `getApiUrl`
+-   [ ] Base URL defaults to `http://localhost:3000/api` (use `.url()` to override)
 -   [ ] Auth: cover 401 and 200 (if applicable)
 -   [ ] Validation: cover 400 and success
 -   [ ] Filtering: create all variants; assert every item
--   [ ] Access control: emphasize denials (403)
--   [ ] Response types imported and used
--   [ ] Cleanup registered and performed if fixtures used
+-   [ ] Access control: emphasize 401 for unauthenticated, 404 for unauthorized access
+-   [ ] Response types imported and used (e.g., `Receipt` from `src/types/receipt.ts`)
+-   [ ] Clean up created entities in `afterEach` if needed
 -   [ ] **Scan for redundant tests and assertions before finalizing**
 
 ## Reference

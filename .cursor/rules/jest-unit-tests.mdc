@@ -99,8 +99,9 @@ For comprehensive examples, patterns, and detailed guidance, see: `UNIT_TEST_GUI
 
 Good examples in codebase:
 
--   `apps/bugs/test/jest/lib/magnus/lib/antihack/pagination.test.ts` - Pure function with comprehensive coverage
--   `apps/pr-reviews/test/jest/lib/safe/*.test.ts` - Pure functions with factory patterns and named constants
+-   `test/jest/itemSeeder.test.ts` - Testing random generation with Math.random mocking
+-   `test/jest/storeImageRegistry.test.ts` - Testing store data retrieval and formatting logic
+-   `test/jest/pathResolver.test.ts` - Simple utility function testing
 
 ### Minimal Test Data Pattern
 
@@ -108,42 +109,34 @@ Only include properties that are relevant to what you're testing. Use minimal va
 
 ```typescript
 // ❌ Bad: Includes irrelevant properties with realistic values
-function createMockTransaction() {
+function createMockStoreData() {
     return {
-        // Properties used in hash calculation
-        safe: "0x123...",
-        to: "0x456...",
-        value: "1000000000000000000",
-        nonce: "1",
+        // Properties used in display
+        imagePath: "/images/stores/walmart.png",
+        displayName: "Walmart",
+        fallbackColor: "#0071ce",
         // Unused metadata with unnecessary detail
-        executionDate: "2024-01-01T00:00:00Z",
-        submissionDate: "2024-01-01T00:00:00Z",
-        modified: "2024-01-01T00:00:00Z",
-        safeTxHash: "0xhash123",
-        executor: "0x789...",
-        isExecuted: false,
-        confirmationsRequired: 2,
-        confirmations: [],
+        storeId: "12345",
+        category: "retail",
+        location: { city: "Seattle", state: "WA" },
+        hours: "9am-9pm",
+        phone: "555-1234",
     };
 }
 
 // ✅ Good: Separates relevant data from required-but-unused fields
-function createMockTransaction(overrides?) {
+function createMockStoreData(overrides?) {
     return {
         // Properties actually used by the function under test
-        safe: "0x123...",
-        to: "0x456...",
-        value: "1000000000000000000",
-        nonce: "1",
-        // Required by type but unused - minimal values with comment
-        executionDate: null,
-        submissionDate: "",
-        modified: "",
-        safeTxHash: "",
-        executor: null,
-        isExecuted: false,
-        confirmationsRequired: 0,
-        confirmations: [],
+        imagePath: "/images/stores/walmart.png",
+        displayName: "Walmart",
+        fallbackColor: "#0071ce",
+        // Required by type but unused - minimal values
+        storeId: null,
+        category: "",
+        location: null,
+        hours: "",
+        phone: "",
         ...overrides,
     };
 }
@@ -160,14 +153,14 @@ function createMockTransaction(overrides?) {
 
 ```typescript
 // ❌ Bad: Redundant optional chaining after null check
-expect(result).not.toBeNull();
-expect(result?.chainId).toBe(1);
-expect(result?.safeAddress).toBe("0x123...");
+expect(data).not.toBeNull();
+expect(data?.displayName).toBe("Walmart");
+expect(data?.fallbackColor).toBe("#0071ce");
 
 // ✅ Good: Use non-null assertion after check
-expect(result).not.toBeNull();
-expect(result!.chainId).toBe(1);
-expect(result!.safeAddress).toBe("0x123...");
+expect(data).not.toBeNull();
+expect(data!.displayName).toBe("Walmart");
+expect(data!.fallbackColor).toBe("#0071ce");
 ```
 
 ## Security

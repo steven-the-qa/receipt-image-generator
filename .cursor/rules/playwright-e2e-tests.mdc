@@ -1,8 +1,8 @@
 ---
 description: How to design clean and robust Playwright E2E tests
 globs:
-  - "apps/bugs/test/playwright/**/*.spec.ts"
-  - "!apps/bugs/test/playwright/api/**/*.spec.ts"
+  - "test/playwright/**/*.spec.ts"
+  - "!test/playwright/api/**/*.spec.ts"
 alwaysApply: true
 ---
 # Playwright Tests Guidelines
@@ -12,22 +12,22 @@ alwaysApply: true
 1. Always use `getByTestId()` for element selection. If not available, use `getByRole()`.
    ```typescript
    // Prefer this
-   const signInButton = page.getByTestId("ExampleButton_signIn");
-   await signInButton.click();
+   const addItemButton = page.getByTestId("addItem");
+   await addItemButton.click();
 
    // Instead of
-   const signInButton = page.getByRole("button", { name: "Sign In" });
-   await signInButton.click();
+   const addItemButton = page.getByRole("button", { name: "Add Item" });
+   await addItemButton.click();
    ```
 
 2. Save locators to variables before using them
    ```typescript
    // DO:
-   const exampleSignInButton = page.getByTestId("ExampleButton_signIn");
-   await exampleSignInButton.click();
+   const addItemButton = page.getByTestId("addItem");
+   await addItemButton.click();
 
    // DON'T:
-   await page.getByTestId("ExampleButton_signIn").click();
+   await page.getByTestId("addItem").click();
    ```
 
 3. Element naming convention
@@ -37,19 +37,20 @@ alwaysApply: true
 ## API Response Handling
 ```typescript
 test('handles API response correctly', async ({ page }) => {
-    await test.step("mark unclassified report as chief finding", async () => {
-        // Start waiting for response before the form fill triggers it
-        const responsePromise = newTab.waitForResponse((response) =>
-            response.url().endsWith(`/api/triaging/reports/${unclassifiedReport.id}/classify`)
+    await test.step("save receipt and verify success notification", async () => {
+        // Start waiting for response before clicking save
+        const responsePromise = page.waitForResponse((response) =>
+            response.url().includes('/api/receipts') && response.request().method() === 'POST'
         );
 
-        // Fill the form which will trigger the request
-        await fillReportClassificationFormAsChiefFinding(newTab);
+        // Click save button which will trigger the request
+        const saveButton = page.getByTestId("CreateReceipt_saveButton");
+        await saveButton.click();
 
-        // Wait for both the response and the success message
+        // Wait for both the response and the success notification
         await Promise.all([
             responsePromise,
-            expect(newTab.getByText("Report has been marked as Chief Finding")).toBeVisible(),
+            expect(page.getByText("Receipt saved successfully")).toBeVisible(),
         ]);
     });
 });
@@ -57,90 +58,58 @@ test('handles API response correctly', async ({ page }) => {
 
 ## Test Hooks
 ```typescript
-// Use beforeAll for fixture setup and performance measurement
+// Use beforeAll for fixture setup
 test.beforeAll(async () => {
-    await measurePerformance("Fixtures Setup", async () => {
-        await setupTestFixtures();
-    });
+    // Setup test data if needed
+    // Note: Create test data via API endpoints or browser interactions
 });
 
-// Use beforeEach for common setup that requires fixtures to already be set up
+// Use beforeEach for common setup
 test.beforeEach(async ({ page }) => {
-    await flagON(page, FeatureFlag.MANAGED_TRIAGE_IN_APP_BANNER);
-    await flagOFF(page, FeatureFlag.EMAIL_PREFERENCES_ANNOUNCEMENT);
+    // Navigate to base URL or perform common setup
+    await page.goto('/');
 });
 ```
 
-## Custom Fixtures
+## Test Data Setup
+
+For E2E tests, create test data through browser interactions or helper functions:
+
 ```typescript
-// Simplified example of a test fixtures file
-import type { User, Project, Report } from "@repo/db";
-import { Role, Status } from "types/prisma";
-import { createProject } from "test/factories/project";
-import { createReport } from "test/factories/report";
-import { createTestUser } from "test/factories/user";
+// Helper function to register and login a user via UI
+export async function registerAndLoginUser(
+    page: Page,
+    { username, email, password }: { username: string; email: string; password: string }
+) {
+    await test.step("register and login user", async () => {
+        // Register
+        await page.goto('/signup');
+        await page.getByTestId("Signup_username").fill(username);
+        await page.getByTestId("Signup_email").fill(email);
+        await page.getByTestId("Signup_password").fill(password);
+        await page.getByTestId("Signup_confirmPassword").fill(password);
+        await page.getByTestId("Signup_submit").click();
+        await page.waitForURL('/');
 
-// Define the fixture structure
-type TestFixtures = {
-    user: User;
-    project: Project;
-    reports: {
-        active: Report;
-        completed: Report;
-    };
-};
-
-let fixtures: TestFixtures;
-
-// Setup function to initialize test data
-export async function setupTestFixtures() {
-    // Create basic test entities
-    const user = await createTestUser({ role: Role.admin });
-    const project = await createProject();
-
-    // Create test reports in different states
-    const activeReport = await createReport({
-        status: Status.active,
-        projectId: project.id,
-        reportSubscriptions: {
-            create: { userId: user.id, projectId: project.id },
-        }
+        // Login
+        await page.goto('/login');
+        await page.getByTestId("Login_emailOrUsername").fill(email);
+        await page.getByTestId("Login_password").fill(password);
+        await page.getByTestId("Login_submit").click();
+        await page.waitForURL('/');
     });
-
-    const completedReport = await createReport({
-        status: Status.completed,
-        projectId: project.id,
-        reportSubscriptions: {
-            create: { userId: user.id, projectId: project.id },
-        }
-    });
-
-    // Store fixtures for later retrieval
-    fixtures = {
-        user,
-        project,
-        reports: {
-            active: activeReport,
-            completed: completedReport
-        }
-    };
-}
-
-// Helper to access fixtures in tests
-export function getFixtures(): TestFixtures {
-    if (!fixtures) {
-        throw new Error("Fixtures have not been initialized. Did you call setupTestFixtures?");
-    }
-    return fixtures;
 }
 
 // Usage in a test file:
-test('user can view active reports', async ({ page }) => {
-    const { user, reports } = getFixtures();
-    await loginAs(page, user);
+test('user can view saved receipts', async ({ page }) => {
+    await registerAndLoginUser(page, {
+        username: 'testuser',
+        email: 'test@example.com',
+        password: 'password123'
+    });
 
-    await page.goto('/reports/active');
-    await expect(page.getByText(reports.active.title)).toBeVisible();
+    await page.goto('/saved-receipts');
+    await expect(page.getByText('Saved Receipts')).toBeVisible();
 });
 ```
 
@@ -148,60 +117,47 @@ test('user can view active reports', async ({ page }) => {
 
 1. Mimic real user flows completely in e2e tests
    ```typescript
-    test("Happy Path: User can sign-up successfully (1.4)", async ({ page }) => {
+    test("Happy Path: User can sign-up successfully", async ({ page }) => {
         // Create the new account attributes
-        const userName = generateUsername();
-        const userEmail = generateEmail();
-        const userPassword = faker.internet.password();
+        const userName = `testuser${Date.now()}`;
+        const userEmail = `test${Date.now()}@example.com`;
+        const userPassword = 'password123';
 
-        // Fill and submit the Sign-up form, then verify we land in the correct page
+        // Fill and submit the Sign-up form, then verify we land on the home page
         await page.goto("/signup");
         await fillSignupForm(page, { username: userName, email: userEmail, password: userPassword });
-        await page.waitForURL("/signup/verify-email");
+        await page.waitForURL("/");
 
-        // Copy verification of Verify modal
-        const titleLabel = page.getByTestId("EmailVerificationScreen_title");
-        await expect(titleLabel).toBeVisible();
-        await expect(titleLabel).toHaveText("Please Verify Your Email Address");
-
-        const descriptionLabel = page.getByTestId("EmailVerificationScreen_description");
-        await expect(descriptionLabel).toBeVisible();
-        await expect(descriptionLabel).toHaveText(
-            "An email has been sent to " + userEmail.toLowerCase() + " with a link to verify your account."
-        );
-
-        const contactInfoLabel = page.getByTestId("EmailVerificationScreen_contactInfo");
-        await expect(contactInfoLabel).toBeVisible();
-        await expect(contactInfoLabel).toHaveText("Having problems? Contact Immunefi.");
-
-        // Check the emailTo link
-        const contactEmailTo = page.getByTestId("EmailVerificationScreen_emailTo");
-        await expect(contactEmailTo).toHaveAttribute("href", "mailto:support@immunefi.com");
+        // Verify user is logged in by checking for authenticated UI elements
+        const createReceiptTab = page.getByTestId("Tabs_createReceipt");
+        await expect(createReceiptTab).toBeVisible();
     });
    ```
 
 2. Helper functions are acceptable when not testing the main flow
    ```typescript
-   // Helper for headless login
-    export async function logout(page: Page, isMobile: boolean) {
-        await test.step("logout", async () => {
-            if (!isMobile) {
-                await page.getByTestId("LoggedInHeader_DesktopUserMenu").click();
-            } else {
-                await maybeOpenMobileMenu({ page, isMobile });
-            }
+   // Helper for login
+    export async function loginUser(page: Page, { email, password }: { email: string; password: string }) {
+        await test.step("login", async () => {
+            await page.goto("/login");
+            const emailField = page.getByTestId("Login_emailOrUsername");
+            const passwordField = page.getByTestId("Login_password");
+            const submitButton = page.getByTestId("Login_submit");
 
-            await page.getByRole("menuitem", { name: "Log out" }).click({ delay: 100 });
+            await emailField.fill(email);
+            await passwordField.fill(password);
+            await submitButton.click();
+            await page.waitForURL("/");
         });
     }
 
-    test("User can log in after logging out", async ({ page, isMobile }) => {
+    test("User can create receipt after logging in", async ({ page }) => {
         // ...the setup for the thing we're testing
+        await loginUser(page, { email: "test@example.com", password: "password123" });
+        // ...the main content of the test where we verify receipt creation
         await page.goto("/");
-        await fillLoginForm(page, { email: user.email, password: "password" });
-        // ...the helper that we've verified in a logout test elsewhere already
-        await logout(page, isMobile);
-        // ...the main content of the test where we verify login ability
+        const storeSelect = page.getByTestId("CreateReceipt_storeSelect");
+        await expect(storeSelect).toBeVisible();
    ```
 
 ## E2E vs API Testing Separation
@@ -212,22 +168,26 @@ test('user can view active reports', async ({ page }) => {
 // ❌ DON'T: Mix API testing framework with E2E browser tests
 test("user workflow", async ({ page, api }) => {
     // This violates E2E testing principles
-    await api.path("/users").postRequest(201);  // Bypasses the UI
-    await page.goto("/dashboard");               // Then tests the UI
+    await api.path("/auth-register").body({...}).postRequest(200);  // Bypasses the UI
+    await page.goto("/saved-receipts");               // Then tests the UI
 });
 
 // ✅ DO: Keep E2E tests purely browser-based
 test("user workflow", async ({ page }) => {
     // Test the complete user flow through the browser
     await page.goto("/signup");
-    await fillSignupForm(page, userData);
-    await page.waitForURL("/dashboard");
+    await fillSignupForm(page, { username: "testuser", email: "test@example.com", password: "password123" });
+    await page.waitForURL("/");
 });
 
 // ✅ DO: Use API framework only in dedicated API tests
 test("API endpoint", async ({ api }) => {
-    const response = await api.path("/users").postRequest(201);
-    expect(response.data.id).toBeDefined();
+    const response = await api.path("/auth-register").body({
+        email: "test@example.com",
+        username: "testuser",
+        password: "password123"
+    }).postRequest(200);
+    expect(response.id).toBeDefined();
 });
 ```
 
@@ -238,8 +198,8 @@ test("API endpoint", async ({ api }) => {
 - API setup should be done through browser interactions or test fixtures, not direct API calls
 
 **For test data setup in E2E tests:**
-- Use test fixtures and factory functions for database setup
-- Use helper functions that interact through the browser when testing user flows
+- Use helper functions that interact through the browser (register/login via UI)
+- Create test data through browser interactions when testing user flows
 - Reserve direct API calls for dedicated API test suites
 
 ## Assertion Best Practices
@@ -273,11 +233,11 @@ test("API endpoint", async ({ api }) => {
         { username, email, password }: { username: string; email: string; password: string }
     ) {
         await test.step("fillSignupForm", async () => {
-            await page.getByTestId("SignupForm_username").fill(username);
-            await page.getByTestId("SignupForm_email").fill(email);
-            await page.getByPlaceholder("Enter your password...").fill(password);
-            await page.getByTestId("SignupForm_passwordConfirmation").fill(password);
-            await page.getByTestId("SignupForm_signUp").click();
+            await page.getByTestId("Signup_username").fill(username);
+            await page.getByTestId("Signup_email").fill(email);
+            await page.getByTestId("Signup_password").fill(password);
+            await page.getByTestId("Signup_confirmPassword").fill(password);
+            await page.getByTestId("Signup_submit").click();
         });
     }
    ```
@@ -286,7 +246,7 @@ test("API endpoint", async ({ api }) => {
    ```typescript
    // DO:
    async function fillLoginForm(page: Page, credentials: { email: string, password: string }) {
-       const emailField = page.getByTestId("Login_email");
+       const emailField = page.getByTestId("Login_emailOrUsername");
        const passwordField = page.getByTestId("Login_password");
        const submitButton = page.getByTestId("Login_submit");
 
@@ -296,8 +256,10 @@ test("API endpoint", async ({ api }) => {
    }
 
    // Then in the test:
-   await fillLoginForm(page, credentials);
-   await expect(page.getByTestId("Dashboard_greeting")).toBeVisible();
+   await fillLoginForm(page, { email: "test@example.com", password: "password123" });
+   await page.waitForURL('/');
+   const receiptItem = page.getByTestId("receiptItem");
+   await expect(receiptItem).toBeVisible();
 
    // DON'T: Include assertions in the helper function
    ```
@@ -311,35 +273,37 @@ test("API endpoint", async ({ api }) => {
 
 ```typescript
 test("Form validation shows appropriate error messages", async ({ page }) => {
-  await page.goto('/contact');
+  await page.goto('/signup');
 
   // Submit without filling required fields
-  const submit = page.getByTestId("Login_submit");
+  const submit = page.getByTestId("Signup_submit");
   await submit.click();
 
   // Use soft assertions to check all error messages
-  const nameError = page.getByTestId("Login_nameError");
-  const emailError = page.getByTestId("Login_emailError");
-  const messageError = page.getByTestId("Login_messageError");
+  const usernameError = page.getByTestId("Signup_usernameError");
+  const emailError = page.getByTestId("Signup_emailError");
+  const passwordError = page.getByTestId("Signup_passwordError");
 
-  await expect.soft(nameError).toBeVisible();
+  await expect.soft(usernameError).toBeVisible();
   await expect.soft(emailError).toBeVisible();
-  await expect.soft(messageError).toBeVisible();
+  await expect.soft(passwordError).toBeVisible();
 
   // Now fill in the form and check submission works
-  const name = page.getByTestId("Login_name");
-  const email = page.getByTestId("Login_email");
-  const message = page.getByTestId("Login_message");
+  const username = page.getByTestId("Signup_username");
+  const email = page.getByTestId("Signup_email");
+  const password = page.getByTestId("Signup_password");
+  const confirmPassword = page.getByTestId("Signup_confirmPassword");
 
-  await name.fill("Test User");
+  await username.fill("testuser");
   await email.fill("test@example.com");
-  await message.fill("Test message content");
+  await password.fill("password123");
+  await confirmPassword.fill("password123");
   await submit.click();
 
-  // Check success state
-  const successMessage = page.getByTestId("Notification_successMessage");
-  await expect(successMessage).toBeVisible();
-  await expect(successMessage).toHaveText("Success!");
+  // Check success state - should navigate to home page
+  await page.waitForURL('/');
+  const createReceiptTab = page.getByTestId("Tabs_createReceipt");
+  await expect(createReceiptTab).toBeVisible();
 });
 ```
 
