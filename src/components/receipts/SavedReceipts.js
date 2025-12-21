@@ -9,6 +9,8 @@ export default function SavedReceipts({ user, onLoadReceipt }) {
   const [favoritesOnly, setFavoritesOnly] = useState(false);
   const [editingNameId, setEditingNameId] = useState(null);
   const [editingNameValue, setEditingNameValue] = useState('');
+  const [notification, setNotification] = useState(null);
+  const [deleteModalReceiptId, setDeleteModalReceiptId] = useState(null);
 
   useEffect(() => {
     loadReceipts();
@@ -36,23 +38,53 @@ export default function SavedReceipts({ user, onLoadReceipt }) {
       
       setReceipts(receipts.map(r => r.id === receipt.id ? updated : r));
       setError(null); // Clear any previous errors
+      
+      // Show notification
+      setNotification({
+        message: newFavoriteStatus ? 'Added to favorites' : 'Removed from favorites',
+        type: 'success'
+      });
+      
+      // Auto-hide notification after 3 seconds
+      setTimeout(() => {
+        setNotification(null);
+      }, 3000);
     } catch (err) {
       console.error('Error toggling favorite:', err);
       setError(err.message || 'Failed to update favorite status');
     }
   };
 
-  const handleDelete = async (receiptId) => {
-    if (!window.confirm('Are you sure you want to delete this receipt?')) {
-      return;
-    }
+  const handleDeleteClick = (receiptId) => {
+    setDeleteModalReceiptId(receiptId);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!deleteModalReceiptId) return;
 
     try {
-      await receiptsAPI.delete(receiptId);
-      setReceipts(receipts.filter(r => r.id !== receiptId));
+      await receiptsAPI.delete(deleteModalReceiptId);
+      setReceipts(receipts.filter(r => r.id !== deleteModalReceiptId));
+      setDeleteModalReceiptId(null);
+      
+      // Show success notification
+      setNotification({
+        message: 'Receipt deleted successfully',
+        type: 'success'
+      });
+      
+      // Auto-hide notification after 3 seconds
+      setTimeout(() => {
+        setNotification(null);
+      }, 3000);
     } catch (err) {
       setError(err.message || 'Failed to delete receipt');
+      setDeleteModalReceiptId(null);
     }
+  };
+
+  const handleDeleteCancel = () => {
+    setDeleteModalReceiptId(null);
   };
 
   const handleStartEditName = (receipt) => {
@@ -126,6 +158,17 @@ export default function SavedReceipts({ user, onLoadReceipt }) {
       {error && (
         <div className="bg-red-900/50 border border-red-500 text-red-200 px-4 py-3 rounded mb-4">
           {error}
+        </div>
+      )}
+
+      {notification && (
+        <div className="fixed top-4 right-4 bg-emerald-600 text-white px-6 py-3 rounded-lg shadow-lg z-50 animate-slide-in">
+          <div className="flex items-center gap-2">
+            <svg className="w-5 h-5 fill-current" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+            </svg>
+            <span>{notification.message}</span>
+          </div>
         </div>
       )}
 
@@ -209,8 +252,8 @@ export default function SavedReceipts({ user, onLoadReceipt }) {
                       <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
                     </svg>
                   ) : (
-                    <svg className="w-5 h-5 fill-current" viewBox="0 0 20 20">
-                      <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" fillRule="evenodd" clipRule="evenodd" />
+                    <svg className="w-5 h-5 fill-none stroke-current" viewBox="0 0 20 20" strokeWidth="1.5">
+                      <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
                     </svg>
                   )}
                 </button>
@@ -227,7 +270,7 @@ export default function SavedReceipts({ user, onLoadReceipt }) {
 
               <div className="flex gap-2">
                 <button
-                  onClick={() => handleDelete(receipt.id)}
+                  onClick={() => handleDeleteClick(receipt.id)}
                   className="flex-1 bg-red-600 hover:bg-red-700 text-white text-sm py-2 px-3 rounded transition-colors"
                 >
                   Delete
@@ -247,6 +290,32 @@ export default function SavedReceipts({ user, onLoadReceipt }) {
               </div>
             </div>
           ))}
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {deleteModalReceiptId && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={handleDeleteCancel}>
+          <div className="bg-slate-800 rounded-lg p-6 max-w-md w-full mx-4 border border-slate-700" onClick={(e) => e.stopPropagation()}>
+            <h3 className="text-xl font-bold text-slate-200 mb-4">Delete Receipt</h3>
+            <p className="text-slate-300 mb-6">
+              Are you sure you want to delete this receipt? This action cannot be undone.
+            </p>
+            <div className="flex gap-3 justify-end">
+              <button
+                onClick={handleDeleteCancel}
+                className="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDeleteConfirm}
+                className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded transition-colors"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

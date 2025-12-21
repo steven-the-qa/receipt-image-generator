@@ -81,6 +81,7 @@ export default function App() {
   const [user, setUser] = useState(null);
   const [authLoading, setAuthLoading] = useState(true);
   const [saveReceiptLoading, setSaveReceiptLoading] = useState(false);
+  const [notification, setNotification] = useState(null);
 
   // Toggle mobile menu
   const toggleMobileMenu = () => {
@@ -533,12 +534,20 @@ export default function App() {
 
   async function saveReceipt() {
     if (!user) {
-      alert('Please log in to save receipts');
+      setNotification({
+        message: 'Please log in to save receipts',
+        type: 'error'
+      });
+      setTimeout(() => setNotification(null), 3000);
       return;
     }
 
     if (receiptItems.length === 0) {
-      alert('Please add at least one item before saving');
+      setNotification({
+        message: 'Please add at least one item before saving',
+        type: 'error'
+      });
+      setTimeout(() => setNotification(null), 3000);
       return;
     }
 
@@ -582,9 +591,28 @@ export default function App() {
       };
 
       await receiptsAPI.create(receiptData);
-      alert('Receipt saved successfully!');
+      
+      // Show success notification
+      setNotification({
+        message: 'Receipt saved successfully!',
+        type: 'success'
+      });
+      
+      // Auto-hide notification after 3 seconds
+      setTimeout(() => {
+        setNotification(null);
+      }, 3000);
     } catch (err) {
-      alert(err.message || 'Failed to save receipt');
+      // Show error notification
+      setNotification({
+        message: err.message || 'Failed to save receipt',
+        type: 'error'
+      });
+      
+      // Auto-hide notification after 5 seconds for errors
+      setTimeout(() => {
+        setNotification(null);
+      }, 5000);
     } finally {
       setSaveReceiptLoading(false);
     }
@@ -599,8 +627,29 @@ export default function App() {
   }
 
   return (
-    <main className="flex flex-col md:flex-row h-screen bg-slate-900 text-white md:overflow-hidden overflow-auto">
-      {/* Mobile Navigation Toggle Button */}
+    <>
+      {notification && (
+        <div className={`fixed top-4 right-4 px-6 py-3 rounded-lg shadow-lg z-50 animate-slide-in ${
+          notification.type === 'success' 
+            ? 'bg-emerald-600 text-white' 
+            : 'bg-red-600 text-white'
+        }`}>
+          <div className="flex items-center gap-2">
+            {notification.type === 'success' ? (
+              <svg className="w-5 h-5 fill-current" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+              </svg>
+            ) : (
+              <svg className="w-5 h-5 fill-current" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+              </svg>
+            )}
+            <span>{notification.message}</span>
+          </div>
+        </div>
+      )}
+      <main className="flex flex-col md:flex-row h-screen bg-slate-900 text-white md:overflow-hidden overflow-auto">
+        {/* Mobile Navigation Toggle Button */}
       <div className="md:hidden bg-slate-800 p-4 flex justify-between items-center border-b border-slate-700">
         <h1 className="text-xl font-bold text-emerald-400">Receipt Generator</h1>
         <button 
@@ -1063,5 +1112,6 @@ export default function App() {
         </RedirectHandler>
       </div>
     </main>
+    </>
   );
 }
