@@ -9,8 +9,6 @@ import DataTools from './components/dashboard/DataTools'
 import EditReceipt from './components/dashboard/EditReceipt'
 import Login from './components/auth/Login'
 import Signup from './components/auth/Signup'
-import ForgotPassword from './components/auth/ForgotPassword'
-import ResetPassword from './components/auth/ResetPassword'
 import SavedReceipts from './components/receipts/SavedReceipts'
 import Notification from './components/common/Notification'
 import { authAPI, receiptsAPI } from './services/api'
@@ -1076,8 +1074,6 @@ export default function App() {
 
             <Route path="/login" element={<Login onLogin={handleLogin} />} />
             <Route path="/signup" element={<Signup />} />
-            <Route path="/forgot-password" element={<ForgotPassword />} />
-            <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/saved-receipts" element={
               user ? (
                 <SavedReceipts user={user} onLoadReceipt={loadReceipt} />
