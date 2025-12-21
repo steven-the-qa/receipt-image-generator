@@ -140,19 +140,20 @@ export default function SavedReceipts({ user, onLoadReceipt }) {
 
   return (
     <div className="p-4 md:p-6">
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-xl md:text-2xl font-bold text-emerald-400">Saved Receipts</h2>
-        <div className="flex items-center gap-4">
-          <label className="flex items-center text-slate-300 cursor-pointer">
+      <div className="mb-6">
+        <h2 className="text-xl md:text-2xl font-bold text-emerald-400 mb-3">Saved Receipts</h2>
+        <label className="flex items-center gap-3 cursor-pointer">
+          <span className="text-sm text-slate-300">Show favorites only</span>
+          <div className="relative inline-flex items-center">
             <input
               type="checkbox"
               checked={favoritesOnly}
               onChange={(e) => setFavoritesOnly(e.target.checked)}
-              className="mr-2 h-4 w-4 rounded text-emerald-500 focus:ring-emerald-400 bg-slate-800 border-slate-600"
+              className="sr-only peer"
             />
-            <span className="text-sm">Favorites only</span>
-          </label>
-        </div>
+            <div className="w-11 h-6 bg-slate-700 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-emerald-500 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500"></div>
+          </div>
+        </label>
       </div>
 
       {error && (
