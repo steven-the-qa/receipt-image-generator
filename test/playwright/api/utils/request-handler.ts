@@ -37,6 +37,7 @@ export class RequestHandler {
     private queryParams: object = {};
     private requestHeaders: Record<string, string> = {};
     private requestBody: any = {};
+    private cookies: string = "";
 
     constructor(request: APIRequestContext, logger: APILogger, baseUrl?: string) {
         this.request = request;
@@ -85,6 +86,16 @@ export class RequestHandler {
     }
 
     /**
+     * Sets cookies for the request
+     * @param {string} cookieString - Cookie string (e.g., "name=value; name2=value2")
+     * @returns {RequestHandler} - Returns this instance for chaining
+     */
+    cookies(cookieString: string): RequestHandler {
+        this.cookies = cookieString;
+        return this;
+    }
+
+    /**
      * Sets the request body for POST/PUT requests
      * @param {any} body - The request payload
      * @returns {RequestHandler} - Returns this instance for chaining
@@ -105,10 +116,15 @@ export class RequestHandler {
         const url = this.getUrl();
 
         await test.step(`GET request to ${url}`, async () => {
-            this.logger.logRequest("GET", url, this.requestHeaders);
+            const headers = { ...this.requestHeaders };
+            if (this.cookies) {
+                headers['Cookie'] = this.cookies;
+            }
+            this.logger.logRequest("GET", url, headers);
             const response = await this.request.get(url, {
-                headers: this.requestHeaders,
+                headers,
             });
+            this.extractCookieFromResponse(response);
             this.cleanUpFields();
 
             const responseStatus = response.status();
@@ -141,12 +157,17 @@ export class RequestHandler {
         const url = this.getUrl();
 
         await test.step(`POST request to ${url}`, async () => {
-            this.logger.logRequest("POST", url, this.requestHeaders, this.requestBody);
+            const headers = { ...this.requestHeaders };
+            if (this.cookies) {
+                headers['Cookie'] = this.cookies;
+            }
+            this.logger.logRequest("POST", url, headers, this.requestBody);
 
             const response = await this.request.post(url, {
-                headers: this.requestHeaders,
+                headers,
                 data: this.requestBody,
             });
+            this.extractCookieFromResponse(response);
             this.cleanUpFields();
 
             const responseStatus = response.status();
@@ -179,11 +200,16 @@ export class RequestHandler {
         const url = this.getUrl();
 
         await test.step(`PUT request to ${url}`, async () => {
-            this.logger.logRequest("PUT", url, this.requestHeaders, this.requestBody);
+            const headers = { ...this.requestHeaders };
+            if (this.cookies) {
+                headers['Cookie'] = this.cookies;
+            }
+            this.logger.logRequest("PUT", url, headers, this.requestBody);
             const response = await this.request.put(url, {
-                headers: this.requestHeaders,
+                headers,
                 data: this.requestBody,
             });
+            this.extractCookieFromResponse(response);
             this.cleanUpFields();
 
             const responseStatus = response.status();
@@ -217,9 +243,14 @@ export class RequestHandler {
         const url = this.getUrl();
 
         await test.step(`DELETE request to ${url}`, async () => {
-            this.logger.logRequest("DELETE", url, this.requestHeaders);
+            const headers = { ...this.requestHeaders };
+            if (this.cookies) {
+                headers['Cookie'] = this.cookies;
+            }
+            this.logger.logRequest("DELETE", url, headers);
 
-            const response = await this.request.delete(url);
+            const response = await this.request.delete(url, { headers });
+            this.extractCookieFromResponse(response);
             this.cleanUpFields();
 
             const responseStatus = response.status();
@@ -261,5 +292,35 @@ export class RequestHandler {
         this.baseUrl = undefined;
         this.requestPath = "";
         this.queryParams = {};
+        // Note: cookies are NOT cleared automatically to maintain session
+    }
+
+    /**
+     * Extract cookie from response and set it for subsequent requests
+     * @param {any} response - Playwright APIResponse
+     */
+    private extractCookieFromResponse(response: any): void {
+        const headers = response.headers();
+        const setCookieHeader = headers['set-cookie'] || headers['Set-Cookie'];
+        if (setCookieHeader) {
+            const cookieArray = Array.isArray(setCookieHeader) ? setCookieHeader : [setCookieHeader];
+            cookieArray.forEach((cookieString: string) => {
+                const [nameValue] = cookieString.split(';');
+                const [name, value] = nameValue.split('=');
+                if (name && value) {
+                    // Update existing cookies or add new one
+                    const existingCookies = this.cookies ? this.cookies.split('; ') : [];
+                    const cookieMap = new Map<string, string>();
+                    existingCookies.forEach(c => {
+                        const [n, v] = c.split('=');
+                        if (n) cookieMap.set(n, v || '');
+                    });
+                    cookieMap.set(name.trim(), value.trim());
+                    this.cookies = Array.from(cookieMap.entries())
+                        .map(([n, v]) => `${n}=${v}`)
+                        .join('; ');
+                }
+            });
+        }
     }
 }

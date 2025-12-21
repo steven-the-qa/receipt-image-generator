@@ -1,5 +1,5 @@
 /* eslint-disable react-hooks/rules-of-hooks */
-import { test as base } from "@playwright/test";
+import { test as base, expect } from "@playwright/test";
 import { RequestHandler } from "../../utils/request-handler";
 import { APILogger } from "../../utils/logger";
 
@@ -14,3 +14,5 @@ export const test = base.extend<TestOptions>({
         await use(requestHandler);
     },
 });
+
+export { expect };
