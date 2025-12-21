@@ -3,6 +3,7 @@ export type ReceiptItem = [string, number | null, number];
 export interface Receipt {
   id?: string;
   user_id: string;
+  receipt_name?: string | null;
   store_name: string;
   custom_store_name?: string | null;
   use_custom_store_name: boolean;

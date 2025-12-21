@@ -35,7 +35,31 @@ async function apiRequest(endpoint, options = {}) {
   const data = await response.json().catch(() => ({}));
   
   if (!response.ok) {
-    throw new Error(data.error || `HTTP error! status: ${response.status}`);
+    console.error('API Error:', {
+      url,
+      status: response.status,
+      error: data.error,
+      details: data.details
+    });
+    
+    // Format error message - don't show full validation details to users
+    let errorMessage = data.error || `HTTP error! status: ${response.status}`;
+    
+    // For validation errors, show a cleaner message
+    if (data.error === 'Validation failed' && data.details) {
+      const missingFields = data.details
+        .filter(d => d.message === 'Required')
+        .map(d => d.path.join('.'))
+        .join(', ');
+      if (missingFields) {
+        errorMessage = `Validation failed: Missing required fields (${missingFields})`;
+      }
+    } else if (data.details) {
+      // For other errors with details, include them but formatted
+      errorMessage = `${errorMessage}: ${JSON.stringify(data.details)}`;
+    }
+    
+    throw new Error(errorMessage);
   }
   
   return data;
@@ -116,17 +140,6 @@ export const receiptsAPI = {
     });
   },
 
-  markFavorite: async (id) => {
-    return apiRequest(`/receipts/${id}/favorite`, {
-      method: 'POST',
-    });
-  },
-
-  unmarkFavorite: async (id) => {
-    return apiRequest(`/receipts/${id}/favorite`, {
-      method: 'DELETE',
-    });
-  },
 
   getFavorites: async () => {
     return apiRequest('/receipts/favorites', {
@@ -134,3 +147,4 @@ export const receiptsAPI = {
     });
   },
 };
+

@@ -35,6 +35,7 @@ const RedirectHandler = ({ children }) => {
 };
 
 export default function App() {
+  const navigate = useNavigate();
   const BASE_RECEIPT_HEIGHT = 350;
   const storeData = retailerInfo.default
   const defaultStore = storeData.filter(store => store.key === '7eleven')[0]
@@ -474,6 +475,62 @@ export default function App() {
     }
   }
 
+  function loadReceipt(receipt) {
+    // Load receipt data into editor state
+    setInputData({
+      storeName: receipt.store_name,
+      purchaseDate: receipt.purchase_date,
+      purchaseTime: receipt.purchase_time,
+      address1: receipt.address1 || '',
+      address2: receipt.address2 || '',
+      city: receipt.city || '',
+      state: receipt.state || '',
+      zip: receipt.zip || '',
+      phone: receipt.phone || '',
+      itemDescription: '',
+      itemPrice: '',
+      itemQuantity: '',
+      numOfCopies: 1,
+      storeNameBox: receipt.store_name_box ?? true,
+      storeAddressBox: receipt.store_address_box ?? true,
+      storePhoneBox: receipt.store_phone_box ?? true,
+      storeBox: receipt.store_box ?? true,
+      purchaseDateBox: receipt.purchase_date_box ?? true,
+      totalSpentBox: receipt.total_spent_box ?? true
+    });
+    
+    setCustomStore({
+      useCustomStoreName: receipt.use_custom_store_name || false,
+      customStoreName: receipt.custom_store_name || ''
+    });
+    
+    setRestaurant(receipt.is_restaurant || false);
+    setEuropeanFormat(receipt.european_format || false);
+    setBlurryReceipt(receipt.blurry_receipt || false);
+    setSuppressDollarSign(receipt.suppress_dollar_sign !== undefined ? receipt.suppress_dollar_sign : true);
+    setCurrentTypeface(receipt.current_typeface || 'font-sans');
+    
+    // Load receipt items
+    const items = receipt.receipt_items || [];
+    setReceiptItems(items);
+    setReceiptItemsCount(items.length);
+    
+    // Set totals
+    setSubtotal(receipt.subtotal || 0);
+    setTotal(receipt.total || 0);
+    
+    // Calculate receipt length
+    let calculatedLength = BASE_RECEIPT_HEIGHT;
+    if (receipt.address2) calculatedLength = 375;
+    if (items.length > 0) {
+      calculatedLength += items.length * 35;
+    }
+    setReceiptLength(calculatedLength);
+    
+    // Navigate to edit route
+    navigate('/edit-receipt');
+  }
+
   async function saveReceipt() {
     if (!user) {
       alert('Please log in to save receipts');
@@ -487,6 +544,13 @@ export default function App() {
 
     setSaveReceiptLoading(true);
     try {
+      // Ensure receipt_items have correct types (price and quantity as numbers)
+      const normalizedReceiptItems = receiptItems.map(item => [
+        item[0], // description (string)
+        item[1] === null ? null : (typeof item[1] === 'string' ? parseFloat(item[1]) : item[1]), // price (number | null)
+        typeof item[2] === 'string' ? parseInt(item[2], 10) : item[2] // quantity (number)
+      ]);
+
       const receiptData = {
         store_name: inputData.storeName,
         custom_store_name: customStore.customStoreName || null,
@@ -499,10 +563,10 @@ export default function App() {
         phone: restaurant ? inputData.phone : null,
         purchase_date: inputData.purchaseDate,
         purchase_time: inputData.purchaseTime,
-        receipt_items: receiptItems,
-        subtotal: subtotal,
-        tax: tax,
-        total: total,
+        receipt_items: normalizedReceiptItems,
+        subtotal: typeof subtotal === 'string' ? parseFloat(subtotal) : subtotal,
+        tax: typeof tax === 'string' ? parseFloat(tax) : tax,
+        total: typeof total === 'string' ? parseFloat(total) : total,
         european_format: europeanFormat,
         suppress_dollar_sign: suppressDollarSign,
         blurry_receipt: blurryReceipt,
@@ -983,7 +1047,7 @@ export default function App() {
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/saved-receipts" element={
               user ? (
-                <SavedReceipts user={user} />
+                <SavedReceipts user={user} onLoadReceipt={loadReceipt} />
               ) : (
                 <div className="flex items-center justify-center h-screen">
                   <div className="text-center">

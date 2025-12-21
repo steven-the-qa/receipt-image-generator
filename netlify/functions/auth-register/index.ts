@@ -86,3 +86,4 @@ const handler: Handler = withCors(
 );
 
 export { handler };
+

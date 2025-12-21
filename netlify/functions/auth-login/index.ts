@@ -21,10 +21,14 @@ const handler: Handler = withCors(
 
     const { data: users, error } = await query.limit(1);
 
+    const errorHeaders: { [key: string]: string } = {
+      'Content-Type': 'application/json'
+    };
+
     if (error || !users || users.length === 0) {
       return {
         statusCode: 401,
-        headers: { 'Content-Type': 'application/json' },
+        headers: errorHeaders,
         body: JSON.stringify({ error: 'Invalid credentials' })
       };
     }
@@ -36,7 +40,7 @@ const handler: Handler = withCors(
     if (!isValid) {
       return {
         statusCode: 401,
-        headers: { 'Content-Type': 'application/json' },
+        headers: errorHeaders,
         body: JSON.stringify({ error: 'Invalid credentials' })
       };
     }
@@ -47,12 +51,14 @@ const handler: Handler = withCors(
     // Return user without password
     const { password_hash, ...userWithoutPassword } = user;
 
+    const successHeaders: { [key: string]: string } = {
+      'Content-Type': 'application/json',
+      'Set-Cookie': createSessionCookie(sessionId)
+    };
+
     return {
       statusCode: 200,
-      headers: {
-        'Content-Type': 'application/json',
-        'Set-Cookie': createSessionCookie(sessionId)
-      },
+      headers: successHeaders,
       body: JSON.stringify(userWithoutPassword)
     };
     })
@@ -60,3 +66,4 @@ const handler: Handler = withCors(
 );
 
 export { handler };
+

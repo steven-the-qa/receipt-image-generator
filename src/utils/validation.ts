@@ -29,6 +29,7 @@ export const receiptItemSchema = z.tuple([
 ]);
 
 export const receiptSchema = z.object({
+  receipt_name: z.string().nullable().optional(),
   store_name: z.string(),
   custom_store_name: z.string().nullable().optional(),
   use_custom_store_name: z.boolean().default(false),

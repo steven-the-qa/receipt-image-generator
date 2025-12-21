@@ -2,15 +2,17 @@ import React, { useState, useEffect } from 'react';
 import { receiptsAPI } from '../../services/api';
 import moment from 'moment';
 
-export default function SavedReceipts({ user }) {
+export default function SavedReceipts({ user, onLoadReceipt }) {
   const [receipts, setReceipts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [favoritesOnly, setFavoritesOnly] = useState(false);
+  const [editingNameId, setEditingNameId] = useState(null);
+  const [editingNameValue, setEditingNameValue] = useState('');
 
   useEffect(() => {
     loadReceipts();
-  }, [favoritesOnly]);
+  }, [favoritesOnly]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const loadReceipts = async () => {
     try {
@@ -27,12 +29,15 @@ export default function SavedReceipts({ user }) {
 
   const handleToggleFavorite = async (receipt) => {
     try {
-      const updated = receipt.is_favorite
-        ? await receiptsAPI.unmarkFavorite(receipt.id)
-        : await receiptsAPI.markFavorite(receipt.id);
+      const newFavoriteStatus = !receipt.is_favorite;
+      const updated = await receiptsAPI.update(receipt.id, {
+        is_favorite: newFavoriteStatus
+      });
       
       setReceipts(receipts.map(r => r.id === receipt.id ? updated : r));
+      setError(null); // Clear any previous errors
     } catch (err) {
+      console.error('Error toggling favorite:', err);
       setError(err.message || 'Failed to update favorite status');
     }
   };
@@ -47,6 +52,34 @@ export default function SavedReceipts({ user }) {
       setReceipts(receipts.filter(r => r.id !== receiptId));
     } catch (err) {
       setError(err.message || 'Failed to delete receipt');
+    }
+  };
+
+  const handleStartEditName = (receipt) => {
+    const currentName = receipt.receipt_name || '';
+    setEditingNameId(receipt.id);
+    setEditingNameValue(currentName);
+  };
+
+  const handleCancelEditName = () => {
+    setEditingNameId(null);
+    setEditingNameValue('');
+  };
+
+  const handleSaveName = async (receipt) => {
+    const trimmedValue = editingNameValue.trim();
+    // Allow empty name (user can clear it)
+    try {
+      const updated = await receiptsAPI.update(receipt.id, {
+        receipt_name: trimmedValue || null
+      });
+      
+      setReceipts(receipts.map(r => r.id === receipt.id ? updated : r));
+      setEditingNameId(null);
+      setEditingNameValue('');
+      setError('');
+    } catch (err) {
+      setError(err.message || 'Failed to update receipt name');
     }
   };
 
@@ -110,11 +143,58 @@ export default function SavedReceipts({ user }) {
             >
               <div className="flex justify-between items-start mb-3">
                 <div className="flex-1">
-                  <h3 className="font-semibold text-slate-200 mb-1">
-                    {receipt.use_custom_store_name && receipt.custom_store_name
-                      ? receipt.custom_store_name
-                      : receipt.store_name}
-                  </h3>
+                  {editingNameId === receipt.id ? (
+                    <div className="flex items-center gap-2 mb-1">
+                      <input
+                        type="text"
+                        value={editingNameValue}
+                        onChange={(e) => setEditingNameValue(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            handleSaveName(receipt);
+                          } else if (e.key === 'Escape') {
+                            handleCancelEditName();
+                          }
+                        }}
+                        placeholder="Enter receipt name..."
+                        className="flex-1 bg-slate-700 border border-emerald-500 rounded px-2 py-1 text-slate-200 text-sm focus:outline-none focus:ring-1 focus:ring-emerald-400"
+                        autoFocus
+                      />
+                      <button
+                        onClick={() => handleSaveName(receipt)}
+                        className="text-emerald-400 hover:text-emerald-300 transition-colors"
+                        title="Save"
+                      >
+                        <svg className="w-4 h-4 fill-current" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                        </svg>
+                      </button>
+                      <button
+                        onClick={handleCancelEditName}
+                        className="text-slate-400 hover:text-slate-300 transition-colors"
+                        title="Cancel"
+                      >
+                        <svg className="w-4 h-4 fill-current" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                        </svg>
+                      </button>
+                    </div>
+                  ) : (
+                    <>
+                      <h3 
+                        className="font-semibold text-slate-200 mb-1 cursor-pointer hover:text-emerald-400 transition-colors"
+                        onClick={() => handleStartEditName(receipt)}
+                        title="Click to edit name"
+                      >
+                        {receipt.receipt_name || 'Unnamed Receipt'}
+                      </h3>
+                      <p className="text-xs text-slate-500 mb-1">
+                        {receipt.use_custom_store_name && receipt.custom_store_name
+                          ? receipt.custom_store_name
+                          : receipt.store_name}
+                      </p>
+                    </>
+                  )}
                   <p className="text-sm text-slate-400">
                     {formatDate(receipt.purchase_date)} at {receipt.purchase_time}
                   </p>
@@ -154,12 +234,15 @@ export default function SavedReceipts({ user }) {
                 </button>
                 <button
                   onClick={() => {
-                    // TODO: Load receipt into editor
-                    console.log('Load receipt:', receipt);
+                    if (onLoadReceipt) {
+                      onLoadReceipt(receipt);
+                    } else {
+                      console.log('Load receipt:', receipt);
+                    }
                   }}
                   className="flex-1 bg-slate-700 hover:bg-slate-600 text-white text-sm py-2 px-3 rounded transition-colors"
                 >
-                  Edit
+                  Load Receipt
                 </button>
               </div>
             </div>
@@ -169,3 +252,4 @@ export default function SavedReceipts({ user }) {
     </div>
   );
 }
+
