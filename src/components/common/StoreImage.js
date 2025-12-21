@@ -41,13 +41,8 @@ const StoreImage = ({
     setImageLoaded(false);
     setImageError(false);
     
-    // Check if we're in GitHub Pages environment
-    const isGitHubPages = window.location.hostname.includes('github.io');
-    
-    // Use the appropriate path based on environment
-    const primaryPath = isGitHubPages 
-      ? `/receipt-image-generator/images/stores/${storeName}.png`
-      : `/images/stores/${storeName}.png`;
+    // Use standard path for Netlify deployment
+    const primaryPath = `/images/stores/${storeName}.png`;
     
     // Set the source immediately for a quick first attempt
     setImageSrc(primaryPath);
@@ -59,22 +54,9 @@ const StoreImage = ({
       setDebugInfo(`Loaded from: ${primaryPath}`);
     };
     img.onerror = () => {
-      // If the first attempt fails, try the alternate path
-      const alternatePath = isGitHubPages
-        ? `/images/stores/${storeName}.png` // Try without prefix
-        : `/receipt-image-generator/images/stores/${storeName}.png`; // Try with prefix
-        
-      const altImg = new Image();
-      altImg.onload = () => {
-        setImageSrc(alternatePath);
-        setImageLoaded(true);
-        setDebugInfo(`Loaded from alternate: ${alternatePath}`);
-      };
-      altImg.onerror = () => {
-        setImageError(true);
-        setDebugInfo(`Failed to load image for: ${storeName}`);
-      };
-      altImg.src = alternatePath;
+      // If the first attempt fails, image doesn't exist
+      setImageError(true);
+      setDebugInfo(`Failed to load image for: ${storeName}`);
     };
     img.src = primaryPath;
     
@@ -127,7 +109,6 @@ const StoreImage = ({
 if (typeof window !== 'undefined') {
   window.testStorePaths = (storeName) => {
     const paths = [
-      `/receipt-image-generator/images/stores/${storeName}.png`,
       `/images/stores/${storeName}.png`,
       `./images/stores/${storeName}.png`,
       `images/stores/${storeName}.png`,

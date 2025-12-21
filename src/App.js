@@ -25,9 +25,8 @@ const RedirectHandler = ({ children }) => {
     const redirectFrom = query.get('redirectFrom');
     
     if (redirectFrom) {
-      // Clean the URL and navigate to the correct route
-      const cleanRedirect = redirectFrom.replace('/receipt-image-generator', '');
-      navigate(cleanRedirect || '/', { replace: true });
+      // Navigate to the correct route
+      navigate(redirectFrom || '/', { replace: true });
     }
   }, [location, navigate]);
   
