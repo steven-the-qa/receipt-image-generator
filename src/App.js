@@ -12,6 +12,7 @@ import Signup from './components/auth/Signup'
 import ForgotPassword from './components/auth/ForgotPassword'
 import ResetPassword from './components/auth/ResetPassword'
 import SavedReceipts from './components/receipts/SavedReceipts'
+import Notification from './components/common/Notification'
 import { authAPI, receiptsAPI } from './services/api'
 
 // Helper component to handle redirects from 404.html
@@ -627,26 +628,10 @@ export default function App() {
 
   return (
     <>
-      {notification && (
-        <div className={`fixed top-4 right-4 px-6 py-3 rounded-lg shadow-lg z-50 animate-slide-in ${
-          notification.type === 'success' 
-            ? 'bg-emerald-600 text-white' 
-            : 'bg-red-600 text-white'
-        }`}>
-          <div className="flex items-center gap-2">
-            {notification.type === 'success' ? (
-              <svg className="w-5 h-5 fill-current" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-              </svg>
-            ) : (
-              <svg className="w-5 h-5 fill-current" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-              </svg>
-            )}
-            <span>{notification.message}</span>
-          </div>
-        </div>
-      )}
+      <Notification 
+        notification={notification} 
+        onDismiss={() => setNotification(null)} 
+      />
       <main className="flex flex-col md:flex-row h-screen bg-slate-900 text-white md:overflow-hidden overflow-auto">
         {/* Mobile Navigation Toggle Button */}
       <div className="md:hidden bg-slate-800 p-4 flex justify-between items-center border-b border-slate-700">
