@@ -18,3 +18,4 @@ describe('resolveAssetPath', () => {
     expect(result).toBe('//images/stores/walmart.png');
   });
 });
+

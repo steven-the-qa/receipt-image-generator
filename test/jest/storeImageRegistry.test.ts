@@ -72,3 +72,4 @@ describe('getStoreImageData', () => {
     expect(formatStoreName('fooBarBaz')).toBe('Foo Bar Baz');
   });
 });
+

@@ -16,7 +16,8 @@ Receipt Image Generator is a flexible, browser-based utility for creating realis
 - **Preset Templates**: Use built-in templates for common receipt styles (grocery, restaurant, retail, etc.)
 - **Batch Generation**: Create multiple receipts with varying parameters for comprehensive testing
 - **Mobile-Friendly Interface**: Create and preview receipts directly on mobile devices
-- **No Server Dependencies**: Runs entirely in the browser with no backend requirements
+- **User Accounts**: Save and manage receipts with user authentication
+- **Receipt Management**: Save, edit, favorite, and organize your generated receipts
 
 ## Benefits
 
@@ -53,7 +54,7 @@ Receipt Image Generator is a flexible, browser-based utility for creating realis
 
 ## Technical Details
 
-This tool runs entirely in the browser using modern web technologies. No data is sent to any server during receipt generation, making it suitable for applications where data privacy is important.
+This is a full-stack web application built with React (frontend) and Netlify Functions (backend). Receipt generation happens client-side, while user authentication, receipt storage, and data management are handled by the backend API. The application uses Supabase (PostgreSQL) for data persistence and custom session-based authentication.
 
 ## License
 
