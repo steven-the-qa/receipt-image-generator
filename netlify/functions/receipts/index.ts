@@ -4,8 +4,10 @@ import { createErrorHandler } from '../../../src/middleware/errorHandler';
 import { createAuthHandler } from '../../../src/middleware/auth';
 import { receiptSchema } from '../../../src/utils/validation';
 import type { Receipt } from '../../../src/types/receipt';
+import { withCors } from '../../../src/utils/cors';
 
-const handler: Handler = createErrorHandler(
+const handler: Handler = withCors(
+  createErrorHandler(
   createAuthHandler(async (event) => {
     if (event.httpMethod === 'GET') {
       // List receipts
@@ -97,7 +99,8 @@ const handler: Handler = createErrorHandler(
         body: JSON.stringify({ error: 'Method not allowed' })
       };
     }
-  })
+    })
+  )
 );
 
 export { handler };

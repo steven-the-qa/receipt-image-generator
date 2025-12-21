@@ -7,6 +7,12 @@ import { Routes, Route, NavLink, useNavigate, useLocation } from 'react-router-d
 import CreateReceipt from './components/dashboard/CreateReceipt'
 import DataTools from './components/dashboard/DataTools'
 import EditReceipt from './components/dashboard/EditReceipt'
+import Login from './components/auth/Login'
+import Signup from './components/auth/Signup'
+import ForgotPassword from './components/auth/ForgotPassword'
+import ResetPassword from './components/auth/ResetPassword'
+import SavedReceipts from './components/receipts/SavedReceipts'
+import { authAPI, receiptsAPI } from './services/api'
 
 // Helper component to handle redirects from 404.html
 const RedirectHandler = ({ children }) => {
@@ -71,6 +77,9 @@ export default function App() {
     useCustomStoreName: false,
     customStoreName: '',
   });
+  const [user, setUser] = useState(null);
+  const [authLoading, setAuthLoading] = useState(true);
+  const [saveReceiptLoading, setSaveReceiptLoading] = useState(false);
 
   // Toggle mobile menu
   const toggleMobileMenu = () => {
@@ -436,6 +445,95 @@ export default function App() {
 
   useEffect(() => inputData.address2 ? setReceiptLength(375) : setReceiptLength(BASE_RECEIPT_HEIGHT), [inputData.address2]);
 
+  // Check auth on mount
+  useEffect(() => {
+    checkAuth();
+  }, []);
+
+  async function checkAuth() {
+    try {
+      const currentUser = await authAPI.getCurrentUser();
+      setUser(currentUser);
+    } catch (err) {
+      setUser(null);
+    } finally {
+      setAuthLoading(false);
+    }
+  }
+
+  function handleLogin(userData) {
+    setUser(userData);
+  }
+
+  async function handleLogout() {
+    try {
+      await authAPI.logout();
+      setUser(null);
+    } catch (err) {
+      console.error('Logout error:', err);
+    }
+  }
+
+  async function saveReceipt() {
+    if (!user) {
+      alert('Please log in to save receipts');
+      return;
+    }
+
+    if (receiptItems.length === 0) {
+      alert('Please add at least one item before saving');
+      return;
+    }
+
+    setSaveReceiptLoading(true);
+    try {
+      const receiptData = {
+        store_name: inputData.storeName,
+        custom_store_name: customStore.customStoreName || null,
+        use_custom_store_name: customStore.useCustomStoreName,
+        address1: restaurant ? inputData.address1 : null,
+        address2: restaurant ? inputData.address2 : null,
+        city: restaurant ? inputData.city : null,
+        state: restaurant ? inputData.state : null,
+        zip: restaurant ? inputData.zip : null,
+        phone: restaurant ? inputData.phone : null,
+        purchase_date: inputData.purchaseDate,
+        purchase_time: inputData.purchaseTime,
+        receipt_items: receiptItems,
+        subtotal: subtotal,
+        tax: tax,
+        total: total,
+        european_format: europeanFormat,
+        suppress_dollar_sign: suppressDollarSign,
+        blurry_receipt: blurryReceipt,
+        current_typeface: currentTypeface,
+        is_restaurant: restaurant,
+        store_name_box: inputData.storeNameBox,
+        store_address_box: inputData.storeAddressBox,
+        store_phone_box: inputData.storePhoneBox,
+        store_box: inputData.storeBox,
+        purchase_date_box: inputData.purchaseDateBox,
+        total_spent_box: inputData.totalSpentBox,
+        is_favorite: false,
+      };
+
+      await receiptsAPI.create(receiptData);
+      alert('Receipt saved successfully!');
+    } catch (err) {
+      alert(err.message || 'Failed to save receipt');
+    } finally {
+      setSaveReceiptLoading(false);
+    }
+  }
+
+  if (authLoading) {
+    return (
+      <div className="flex items-center justify-center h-screen bg-slate-900">
+        <div className="text-slate-400">Loading...</div>
+      </div>
+    );
+  }
+
   return (
     <main className="flex flex-col md:flex-row h-screen bg-slate-900 text-white md:overflow-hidden overflow-auto">
       {/* Mobile Navigation Toggle Button */}
@@ -509,8 +607,57 @@ export default function App() {
                 Data Import
               </NavLink>
             </li>
+            {user && (
+              <li>
+                <NavLink 
+                  to="/saved-receipts" 
+                  className={({isActive}) => 
+                    `flex items-center p-3 rounded-lg transition-colors ${
+                      isActive 
+                        ? 'bg-emerald-600 text-white' 
+                        : 'text-slate-300 hover:bg-slate-700'
+                    }`
+                  }
+                  onClick={() => closeMobileMenu(50)}
+                >
+                  <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"></path>
+                  </svg>
+                  Saved Receipts
+                </NavLink>
+              </li>
+            )}
           </ul>
         </nav>
+        <div className="p-4 border-t border-slate-700">
+          {user ? (
+            <div className="space-y-2">
+              <div className="text-sm text-slate-400 px-3 py-2">
+                Logged in as <span className="text-emerald-400 font-semibold">{user.username}</span>
+              </div>
+              <button
+                onClick={handleLogout}
+                className="w-full flex items-center p-3 rounded-lg text-slate-300 hover:bg-slate-700 transition-colors"
+              >
+                <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
+                </svg>
+                Logout
+              </button>
+            </div>
+          ) : (
+            <NavLink
+              to="/login"
+              className="flex items-center p-3 rounded-lg text-slate-300 hover:bg-slate-700 transition-colors"
+              onClick={() => closeMobileMenu(50)}
+            >
+              <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"></path>
+              </svg>
+              Login
+            </NavLink>
+          )}
+        </div>
       </aside>
 
       {/* Main Content Area */}
@@ -558,7 +705,21 @@ export default function App() {
                   {/* Forms Column */}
                   <div className="w-full lg:w-3/5 bg-slate-800 overflow-visible md:overflow-auto">
                     <div className="p-4 md:p-6">
-                      <h2 className="text-xl md:text-2xl font-bold text-emerald-400 mb-4 md:mb-6">Create Your Receipt</h2>
+                      <div className="flex justify-between items-center mb-4 md:mb-6">
+                        <h2 className="text-xl md:text-2xl font-bold text-emerald-400">Create Your Receipt</h2>
+                        {user && (
+                          <button
+                            onClick={saveReceipt}
+                            disabled={saveReceiptLoading || receiptItems.length === 0}
+                            className="flex items-center bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-2 px-4 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                            <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
+                            </svg>
+                            {saveReceiptLoading ? 'Saving...' : 'Save Receipt'}
+                          </button>
+                        )}
+                      </div>
                       <CreateReceipt
                         handleChange={handleChange}
                         handleSelect={handleSelect}
@@ -656,7 +817,21 @@ export default function App() {
                   {/* Forms Column */}
                   <div className="w-full lg:w-3/5 bg-slate-800 overflow-visible md:overflow-auto">
                     <div className="p-4 md:p-6">
-                      <h2 className="text-xl md:text-2xl font-bold text-emerald-400 mb-4 md:mb-6">Format Receipt</h2>
+                      <div className="flex justify-between items-center mb-4 md:mb-6">
+                        <h2 className="text-xl md:text-2xl font-bold text-emerald-400">Format Receipt</h2>
+                        {user && (
+                          <button
+                            onClick={saveReceipt}
+                            disabled={saveReceiptLoading || receiptItems.length === 0}
+                            className="flex items-center bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-2 px-4 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                            <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
+                            </svg>
+                            {saveReceiptLoading ? 'Saving...' : 'Save Receipt'}
+                          </button>
+                        )}
+                      </div>
                       <EditReceipt
                         handleChange={handleChange}
                         inputData={inputData}
@@ -800,6 +975,25 @@ export default function App() {
                   </div>
                 </div>
               </div>
+            } />
+
+            <Route path="/login" element={<Login onLogin={handleLogin} />} />
+            <Route path="/signup" element={<Signup />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
+            <Route path="/saved-receipts" element={
+              user ? (
+                <SavedReceipts user={user} />
+              ) : (
+                <div className="flex items-center justify-center h-screen">
+                  <div className="text-center">
+                    <p className="text-slate-400 mb-4">Please log in to view saved receipts</p>
+                    <NavLink to="/login" className="text-emerald-400 hover:text-emerald-300">
+                      Go to Login
+                    </NavLink>
+                  </div>
+                </div>
+              )
             } />
           </Routes>
         </RedirectHandler>

@@ -3,8 +3,10 @@ import { supabase } from '../../../src/lib/supabase';
 import { createErrorHandler } from '../../../src/middleware/errorHandler';
 import { createAuthHandler } from '../../../src/middleware/auth';
 import { receiptUpdateSchema } from '../../../src/utils/validation';
+import { withCors } from '../../../src/utils/cors';
 
-const handler: Handler = createErrorHandler(
+const handler: Handler = withCors(
+  createErrorHandler(
   createAuthHandler(async (event) => {
     const receiptId = event.path.split('/').pop();
 
@@ -120,7 +122,8 @@ const handler: Handler = createErrorHandler(
         body: JSON.stringify({ error: 'Method not allowed' })
       };
     }
-  })
+    })
+  )
 );
 
 export { handler };

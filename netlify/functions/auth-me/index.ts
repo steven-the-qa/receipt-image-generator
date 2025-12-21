@@ -7,33 +7,24 @@ import { withCors } from '../../../src/utils/cors';
 const handler: Handler = withCors(
   createErrorHandler(
   createAuthHandler(async (event) => {
-    if (event.httpMethod !== 'GET') {
-      return {
-        statusCode: 405,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ error: 'Method not allowed' })
-      };
-    }
+    const { data: user, error } = await supabase
+      .from('users')
+      .select('id, username, email, created_at, updated_at')
+      .eq('id', event.userId)
+      .single();
 
-    const { data: receipts, error } = await supabase
-      .from('receipts')
-      .select('*')
-      .eq('user_id', event.userId)
-      .eq('is_favorite', true)
-      .order('created_at', { ascending: false });
-
-    if (error) {
+    if (error || !user) {
       return {
-        statusCode: 500,
+        statusCode: 404,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ error: 'Failed to fetch favorite receipts' })
+        body: JSON.stringify({ error: 'User not found' })
       };
     }
 
     return {
       statusCode: 200,
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(receipts || [])
+      body: JSON.stringify(user)
     };
     })
   )

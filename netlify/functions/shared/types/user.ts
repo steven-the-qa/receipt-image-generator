@@ -1,0 +1,11 @@
+export interface User {
+  id: string;
+  username: string;
+  email: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface UserWithPassword extends User {
+  password_hash: string;
+}
