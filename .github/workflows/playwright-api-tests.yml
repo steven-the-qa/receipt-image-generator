@@ -4,6 +4,8 @@ env:
   REDIS_URL: redis://localhost:6379
   SLACK_TOKEN: ${{ secrets.SLACK_TOKEN }}
   GITHUB_SLACK_USER_MAP: ${{ secrets.GITHUB_SLACK_USER_MAP }}
+  SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+  SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
 
 on:
   workflow_call:
