@@ -1,5 +1,8 @@
 import { defineConfig, devices } from '@playwright/test';
 
+// Determine which server to start based on test type
+const isApiTest = process.argv.includes('--project=api');
+
 export default defineConfig({
   testDir: './test/playwright',
   fullyParallel: true,
@@ -73,9 +76,18 @@ export default defineConfig({
   //     use: { ...devices["Pixel 7"], userAgent: "Playwright Android", channel: "chromium" },
   // },
   ],
-  webServer: {
-    command: 'npm run start',
-    port: 3000,
+  // Conditionally start servers based on test type:
+  // - API tests: Start netlify dev (runs React on 3000 + Functions proxy on 8888, checks 8888 for readiness)
+  // - E2E tests: Start React only on 3000
+  webServer: isApiTest ? {
+    command: 'npm run netlify:dev',
+    port: 8888, // Check Netlify Functions proxy port for readiness
     reuseExistingServer: true,
+    timeout: 120 * 1000,
+  } : {
+    command: 'npm run start',
+    port: 3000, // Check React dev server port for readiness
+    reuseExistingServer: true,
+    timeout: 120 * 1000,
   },
 });

@@ -32,7 +32,9 @@ export class RequestHandler {
     private request: APIRequestContext;
     private logger: APILogger;
     private baseUrl: string | undefined;
-    private defaultBaseUrl = "http://localhost:3000/api";
+    // Default to Netlify dev server (port 8888) for API tests
+    // E2E tests should override with .url() if needed
+    private defaultBaseUrl = "http://localhost:8888/api";
     private requestPath = "";
     private queryParams: object = {};
     private requestHeaders: Record<string, string> = {};
@@ -90,7 +92,7 @@ export class RequestHandler {
      * @param {string} cookieString - Cookie string (e.g., "name=value; name2=value2")
      * @returns {RequestHandler} - Returns this instance for chaining
      */
-    cookies(cookieString: string): RequestHandler {
+    setCookies(cookieString: string): RequestHandler {
         this.cookies = cookieString;
         return this;
     }

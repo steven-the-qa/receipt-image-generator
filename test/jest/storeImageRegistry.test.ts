@@ -1,11 +1,5 @@
 import { getStoreImageData, storeImageRegistry, formatStoreName } from '../../src/data/storeImageRegistry';
 
-interface StoreImageData {
-  imagePath: string;
-  displayName: string;
-  fallbackColor: string;
-}
-
 describe('getStoreImageData', () => {
   it('returns known registry entry with correct displayName and path', () => {
     const data = getStoreImageData('walgreens');
@@ -33,7 +27,7 @@ describe('getStoreImageData', () => {
   });
 
   it('returns null when storeKey is falsy', () => {
-    expect(getStoreImageData(undefined)).toBeNull();
+    expect(getStoreImageData(undefined as any)).toBeNull();
     expect(getStoreImageData('')).toBeNull();
   });
 
@@ -72,4 +66,3 @@ describe('getStoreImageData', () => {
     expect(formatStoreName('fooBarBaz')).toBe('Foo Bar Baz');
   });
 });
-
