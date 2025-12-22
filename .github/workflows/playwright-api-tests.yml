@@ -37,6 +37,9 @@ jobs:
         with:
           node-version: '20'
 
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+
       - name: Get job ID
         id: get_job_id
         env:
