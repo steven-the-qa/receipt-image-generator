@@ -10,7 +10,7 @@ import type { Receipt } from "../../../src/types/receipt";
 test.describe("GET /api/receipts", () => {
 
   test("401 without authentication", async ({ api }) => {
-    await api.path("/receipts").getRequest(401);
+    await api.path("/receipts").getRequest(402); //intentionally fail to test Slack reporter
   });
 
   test("200 with authentication returns empty array when no receipts", async ({ api, testData }) => {
