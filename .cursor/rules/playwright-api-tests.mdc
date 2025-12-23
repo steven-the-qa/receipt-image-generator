@@ -11,8 +11,14 @@ Purpose: Enable AI to generate robust Playwright API tests that follow our frame
 
 -   Always import our extended fixtures:
     ```ts
-    import { test } from "test/playwright/api/utils/fixtures";
-    import { expect } from "@playwright/test";
+    import { test, expect } from "test/playwright/api/utils/fixtures";
+    ```
+-   Always use `{ api, testData }` fixtures:
+    ```ts
+    test("my test", async ({ api, testData }) => {
+        // api for API calls
+        // testData for test data management
+    });
     ```
 -   Always use `{ api }` fixture and provide an expected status:
     ```ts
@@ -22,22 +28,27 @@ Purpose: Enable AI to generate robust Playwright API tests that follow our frame
     ```ts
     await api.url("http://localhost:8888/api").path("/endpoint").getRequest(200);
     ```
--   For authenticated flows, register and login via API:
+-   **Test Data Management (CRITICAL):**
+    -   **Setup test data via DB** using `testData` fixture (fast, reliable, resilient to API failures)
+    -   **Use API calls only for authentication and testing endpoints**
+    -   **Cleanup is automatic** - no manual cleanup needed
     ```ts
-    // Register a new user
-    await api.path("/auth-register").body({
-        email: "test@example.com",
-        username: "testuser",
-        password: "password123"
-    }).postRequest(200);
+    // ✅ DO: Create test data via DB
+    const userData = createTestUser();
+    const user = await testData.createUser(userData);
+    const receipt = await testData.createReceipt(user.id, createTestReceiptData());
     
-    // Login to get session cookie (automatically stored by RequestHandler)
-    await api.path("/auth-login").body({
-        email: "test@example.com",
-        password: "password123"
-    }).postRequest(200);
+    // Login via API (for authentication)
+    await loginUser(api, userData);
+    
+    // Test the endpoint
+    const receipts = await api.path("/receipts").getRequest(200);
     ```
--   Create test data via API endpoints; clean up created entities in `afterEach` if needed.
+    ```ts
+    // ❌ DON'T: Create test data via API
+    await api.path("/auth-register").body({...}).postRequest(200);
+    await api.path("/receipts").body({...}).postRequest(200);
+    ```
 -   Prefer type-safe responses by importing response types from app code (e.g., `src/types/receipt.ts`).
 -   No defensive code in test bodies: no `if`, no `try/catch` for expected failures.
 
@@ -63,27 +74,24 @@ api.url("http://localhost:8888/api")
 ### Authentication
 
 ```ts
+import { createTestUser, loginUser } from "./utils/helpers";
+
 test.describe("GET /api/auth-me", () => {
     test("401 without session", async ({ api }) => {
         await api.path("/auth-me").getRequest(401);
     });
 
-    test("200 with session", async ({ api }) => {
-        // Register and login
-        await api.path("/auth-register").body({
-            email: "test@example.com",
-            username: "testuser",
-            password: "password123"
-        }).postRequest(200);
+    test("200 with session", async ({ api, testData }) => {
+        // Setup: Create user in DB
+        const userData = createTestUser();
+        await testData.createUser(userData);
+        
+        // Login via API (for authentication)
+        await loginUser(api, userData);
 
-        await api.path("/auth-login").body({
-            email: "test@example.com",
-            password: "password123"
-        }).postRequest(200);
-
-        // Now authenticated
+        // Test: Get current user
         const user = await api.path("/auth-me").getRequest(200);
-        expect(user.email).toBe("test@example.com");
+        expect(user.email).toBe(userData.email);
     });
 });
 ```
@@ -91,23 +99,28 @@ test.describe("GET /api/auth-me", () => {
 ### Validation (400 matrix)
 
 ```ts
+import { createTestUser, loginUser } from "./utils/helpers";
+
 test("POST /api/auth-register validates required fields", async ({ api }) => {
+    // Test validation - no setup needed for 400 cases
     await api.path("/auth-register").body({}).postRequest(400);
     await api.path("/auth-register").body({ email: "invalid" }).postRequest(400);
     await api.path("/auth-register").body({
         email: "valid@example.com",
         username: "testuser",
         password: "password123"
-    }).postRequest(200);
+    }).postRequest(201);
 });
 
-test("POST /api/receipts validates required fields", async ({ api }) => {
-    // Login first
-    await api.path("/auth-login").body({
-        email: "test@example.com",
-        password: "password123"
-    }).postRequest(200);
+test("POST /api/receipts validates required fields", async ({ api, testData }) => {
+    // Setup: Create user in DB
+    const userData = createTestUser();
+    await testData.createUser(userData);
+    
+    // Login via API (for authentication)
+    await loginUser(api, userData);
 
+    // Test validation
     await api.path("/receipts").body({}).postRequest(400);
     await api.path("/receipts").body({ store_name: "Walmart" }).postRequest(400);
 });
@@ -116,106 +129,91 @@ test("POST /api/receipts validates required fields", async ({ api }) => {
 ### Filtering (create ALL variants; assert ALL results)
 
 ```ts
-// Login first
-await api.path("/auth-login").body({
-    email: "test@example.com",
-    password: "password123"
-}).postRequest(200);
+import { createTestUser, createTestReceiptData, loginUser } from "./utils/helpers";
 
-// Create receipts with different favorite statuses
-const favoriteReceipt = await api.path("/receipts").body({
-    store_name: "Walmart",
-    purchase_date: "2024-01-15",
-    purchase_time: "14:30",
-    receipt_items: [],
-    subtotal: 10.99,
-    tax: 0.88,
-    total: 11.87,
-    is_favorite: true,
-    // ... other required fields
-}).postRequest(200);
+test("filtering by favorite returns only favorited receipts", async ({ api, testData }) => {
+    // Setup: Create user and receipts in DB
+    const userData = createTestUser();
+    const user = await testData.createUser(userData);
+    const favoriteReceipt = await testData.createReceipt(user.id, createTestReceiptData({ is_favorite: true }));
+    const regularReceipt = await testData.createReceipt(user.id, createTestReceiptData({ is_favorite: false }));
+    
+    // Login via API (for authentication)
+    await loginUser(api, userData);
 
-const regularReceipt = await api.path("/receipts").body({
-    store_name: "Target",
-    purchase_date: "2024-01-16",
-    purchase_time: "15:00",
-    receipt_items: [],
-    subtotal: 25.50,
-    tax: 2.04,
-    total: 27.54,
-    is_favorite: false,
-    // ... other required fields
-}).postRequest(200);
+    // Test: Filter by favorite
+    const favorites = await api
+        .path("/receipts")
+        .params({ favorite: "true" })
+        .getRequest(200);
 
-// Filter by favorite
-const favorites = await api
-    .path("/receipts")
-    .params({ favorite: "true" })
-    .getRequest(200);
-
-// Assert all returned receipts are favorites
-for (const receipt of favorites) {
-    expect(receipt.is_favorite).toBe(true);
-}
+    // Assert all returned receipts are favorites
+    expect(Array.isArray(favorites)).toBe(true);
+    for (const receipt of favorites) {
+        expect(receipt.is_favorite).toBe(true);
+    }
+    
+    // Verify favorite receipt is included, regular is not
+    const favoriteIds = favorites.map(r => r.id);
+    expect(favoriteIds).toContain(favoriteReceipt.id);
+    expect(favoriteIds).not.toContain(regularReceipt.id);
+});
 ```
 
 ### List Operations
 
 ```ts
-// Login first
-await api.path("/auth-login").body({
-    email: "test@example.com",
-    password: "password123"
-}).postRequest(200);
+import { createTestUser, createTestReceiptData, loginUser } from "./utils/helpers";
 
-// Create multiple receipts
-await api.path("/receipts").body({
-    store_name: "Walmart",
-    // ... required fields
-}).postRequest(200);
+test("GET /api/receipts returns user receipts", async ({ api, testData }) => {
+    // Setup: Create user and receipts in DB
+    const userData = createTestUser();
+    const user = await testData.createUser(userData);
+    await testData.createReceipt(user.id, createTestReceiptData({ store_name: "Walmart" }));
+    await testData.createReceipt(user.id, createTestReceiptData({ store_name: "Target" }));
+    
+    // Login via API (for authentication)
+    await loginUser(api, userData);
 
-await api.path("/receipts").body({
-    store_name: "Target",
-    // ... required fields
-}).postRequest(200);
-
-// Get all receipts
-const receipts = await api.path("/receipts").getRequest(200);
-expect(receipts.length).toBeGreaterThanOrEqual(2);
-expect(receipts.every(r => r.user_id)).toBeTruthy();
+    // Test: Get all receipts
+    const receipts = await api.path("/receipts").getRequest(200);
+    expect(Array.isArray(receipts)).toBe(true);
+    expect(receipts.length).toBeGreaterThanOrEqual(2);
+    expect(receipts.every(r => r.user_id)).toBeTruthy();
+});
 ```
 
 ### Access Control
 
 ```ts
+import { createTestUser, createTestReceiptData, loginUser, logoutUser } from "./utils/helpers";
+
 // Emphasize 401 denials for unauthenticated requests
 test("GET /api/receipts requires authentication", async ({ api }) => {
     await api.path("/receipts").getRequest(401);
 });
 
 // Test user isolation - users can only access their own receipts
-test("users cannot access other users' receipts", async ({ api }) => {
-    // Login as user 1
-    await api.path("/auth-login").body({
-        email: "user1@example.com",
-        password: "password123"
-    }).postRequest(200);
-
-    const receipt1 = await api.path("/receipts").body({
-        store_name: "Walmart",
-        // ... required fields
-    }).postRequest(200);
+test("users cannot access other users' receipts", async ({ api, testData }) => {
+    // Setup: Create user 1 and receipt in DB
+    const user1Data = createTestUser();
+    const user1 = await testData.createUser(user1Data);
+    const receipt1 = await testData.createReceipt(user1.id, createTestReceiptData());
+    
+    // Login as user 1 via API
+    await loginUser(api, user1Data);
 
     // Logout
-    await api.path("/auth-logout").postRequest(200);
+    await logoutUser(api);
 
-    // Login as user 2
-    await api.path("/auth-login").body({
-        email: "user2@example.com",
-        password: "password123"
-    }).postRequest(200);
+    // Setup: Create user 2 in DB
+    const user2Data = createTestUser();
+    await testData.createUser(user2Data);
+    
+    // Login as user 2 via API
+    await loginUser(api, user2Data);
 
-    // User 2 cannot access user 1's receipt
+    // Test: User 2 cannot access user 1's receipt
     await api.path(`/receipts/${receipt1.id}`).getRequest(404);
 });
 ```
@@ -223,36 +221,48 @@ test("users cannot access other users' receipts", async ({ api }) => {
 ### CRUD (templates)
 
 ```ts
-// GET index
-test("GET /api/receipts returns user receipts", async ({ api }) => {
-    // Login first
-    await api.path("/auth-login").body({
-        email: "test@example.com",
-        password: "password123"
-    }).postRequest(200);
+import { createTestUser, createTestReceiptData, loginUser } from "./utils/helpers";
 
+// GET index
+test("GET /api/receipts returns user receipts", async ({ api, testData }) => {
+    // Setup: Create user in DB
+    const userData = createTestUser();
+    await testData.createUser(userData);
+    
+    // Login via API (for authentication)
+    await loginUser(api, userData);
+
+    // Test: Get receipts
     const receipts = await api.path("/receipts").getRequest(200);
     expect(Array.isArray(receipts)).toBe(true);
 });
 
 // GET show (404)
-test("GET /api/receipts/:id returns 404 when not found", async ({ api }) => {
-    await api.path("/auth-login").body({
-        email: "test@example.com",
-        password: "password123"
-    }).postRequest(200);
+test("GET /api/receipts/:id returns 404 when not found", async ({ api, testData }) => {
+    // Setup: Create user in DB
+    const userData = createTestUser();
+    await testData.createUser(userData);
+    
+    // Login via API (for authentication)
+    await loginUser(api, userData);
 
+    // Test: Get non-existent receipt
     await api.path("/receipts/00000000-0000-0000-0000-000000000000").getRequest(404);
 });
 
-// POST create (400 + 200)
-test("POST /api/receipts validates payload", async ({ api }) => {
-    await api.path("/auth-login").body({
-        email: "test@example.com",
-        password: "password123"
-    }).postRequest(200);
+// POST create (400 + 200) - Note: Use API for testing creation endpoint
+test("POST /api/receipts validates payload", async ({ api, testData }) => {
+    // Setup: Create user in DB
+    const userData = createTestUser();
+    await testData.createUser(userData);
+    
+    // Login via API (for authentication)
+    await loginUser(api, userData);
 
+    // Test validation
     await api.path("/receipts").body({}).postRequest(400);
+    
+    // Test successful creation
     const created = await api.path("/receipts").body({
         store_name: "Walmart",
         purchase_date: "2024-01-15",
@@ -262,24 +272,23 @@ test("POST /api/receipts validates payload", async ({ api }) => {
         tax: 0.88,
         total: 11.87,
         // ... other required fields
-    }).postRequest(200);
+    }).postRequest(201);
     expect(created.id).toBeDefined();
 });
 
 // PUT update
-test("PUT /api/receipts/:id updates", async ({ api }) => {
-    await api.path("/auth-login").body({
-        email: "test@example.com",
-        password: "password123"
-    }).postRequest(200);
+test("PUT /api/receipts/:id updates", async ({ api, testData }) => {
+    // Setup: Create user and receipt in DB
+    const userData = createTestUser();
+    const user = await testData.createUser(userData);
+    const receipt = await testData.createReceipt(user.id, createTestReceiptData());
+    
+    // Login via API (for authentication)
+    await loginUser(api, userData);
 
-    const created = await api.path("/receipts").body({
-        store_name: "Walmart",
-        // ... required fields
-    }).postRequest(200);
-
+    // Test: Update receipt
     const updated = await api
-        .path(`/receipts/${created.id}`)
+        .path(`/receipts/${receipt.id}`)
         .body({ receipt_name: "Updated Name", is_favorite: true })
         .putRequest(200);
     expect(updated.receipt_name).toBe("Updated Name");
@@ -287,18 +296,17 @@ test("PUT /api/receipts/:id updates", async ({ api }) => {
 });
 
 // DELETE destroy
-test("DELETE /api/receipts/:id returns 204", async ({ api }) => {
-    await api.path("/auth-login").body({
-        email: "test@example.com",
-        password: "password123"
-    }).postRequest(200);
+test("DELETE /api/receipts/:id returns 204", async ({ api, testData }) => {
+    // Setup: Create user and receipt in DB
+    const userData = createTestUser();
+    const user = await testData.createUser(userData);
+    const receipt = await testData.createReceipt(user.id, createTestReceiptData());
+    
+    // Login via API (for authentication)
+    await loginUser(api, userData);
 
-    const created = await api.path("/receipts").body({
-        store_name: "Walmart",
-        // ... required fields
-    }).postRequest(200);
-
-    await api.path(`/receipts/${created.id}`).deleteRequest(204);
+    // Test: Delete receipt
+    await api.path(`/receipts/${receipt.id}`).deleteRequest(204);
 });
 ```
 
@@ -368,17 +376,56 @@ test("POST /api/receipts validates required fields", async ({ api }) => {
 
 **Action**: After generating tests, review the entire test file to consolidate redundant tests and eliminate unnecessary duplication while maintaining comprehensive coverage.
 
+## Test Data Management Strategy
+
+**CRITICAL: Separation of Concerns**
+
+-   **Test Data Setup = DB Queries** (fast, reliable, resilient to API failures)
+-   **Authentication = API Calls** (needed for session cookies)
+-   **Testing = API Calls** (what we're actually testing)
+
+**Pattern:**
+```ts
+test("my test", async ({ api, testData }) => {
+    // 1. Setup: Create test data in DB (fast, reliable)
+    const userData = createTestUser();
+    const user = await testData.createUser(userData);
+    const receipt = await testData.createReceipt(user.id, createTestReceiptData());
+    
+    // 2. Authentication: Login via API (needed for auth)
+    await loginUser(api, userData);
+    
+    // 3. Testing: Test the endpoint via API (what we're testing)
+    const receipts = await api.path("/receipts").getRequest(200);
+    expect(receipts).toContainEqual(expect.objectContaining({ id: receipt.id }));
+});
+```
+
+**Why this approach:**
+-   **Faster tests** - No HTTP overhead for setup
+-   **More reliable** - Setup doesn't depend on API health
+-   **Better isolation** - Setup failures don't mask test failures
+-   **Clear separation** - Setup = infrastructure, Testing = business logic
+-   **Automatic cleanup** - `testData` fixture handles cleanup automatically
+
+**Never:**
+-   ❌ Create test data via API calls (except when testing those endpoints)
+-   ❌ Use API calls for cleanup
+-   ❌ Mix setup and testing concerns
+
 ## Checklist (enforced mentally by AI)
 
 -   [ ] Test names include HTTP method and endpoint
 -   [ ] All requests specify expected status
 -   [ ] Base URL defaults to `http://localhost:3000/api` (use `.url()` to override)
+-   [ ] **Use `testData` fixture for all test data creation (DB setup)**
+-   [ ] **Use API calls only for authentication and testing endpoints**
+-   [ ] **No manual cleanup needed - automatic via `testData` fixture**
 -   [ ] Auth: cover 401 and 200 (if applicable)
 -   [ ] Validation: cover 400 and success
 -   [ ] Filtering: create all variants; assert every item
 -   [ ] Access control: emphasize 401 for unauthenticated, 404 for unauthorized access
 -   [ ] Response types imported and used (e.g., `Receipt` from `src/types/receipt.ts`)
--   [ ] Clean up created entities in `afterEach` if needed
 -   [ ] **Scan for redundant tests and assertions before finalizing**
 
 ## Reference
