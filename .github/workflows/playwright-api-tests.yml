@@ -6,6 +6,7 @@ env:
   GITHUB_SLACK_USER_MAP: ${{ secrets.GITHUB_SLACK_USER_MAP }}
   SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
   SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+  SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
 
 on:
   workflow_call:
@@ -57,6 +58,9 @@ jobs:
           FORCE_COLOR: 1
           SLACK_TOKEN: ${{ env.SLACK_TOKEN }}
           GITHUB_SLACK_USER_MAP: ${{ env.GITHUB_SLACK_USER_MAP }}
+          SUPABASE_URL: ${{ env.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ env.SUPABASE_ANON_KEY }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ env.SUPABASE_SERVICE_ROLE_KEY }}
           REPO: ${{ github.repository }}
           BRANCH: ${{ github.ref_name }}
           AUTHOR: ${{ github.triggering_actor }}

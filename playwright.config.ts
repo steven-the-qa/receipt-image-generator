@@ -1,4 +1,5 @@
 import { defineConfig, devices } from '@playwright/test';
+import 'dotenv/config';
 
 // Determine which server to start based on test type
 const isApiTest = process.argv.includes('--project=api');
