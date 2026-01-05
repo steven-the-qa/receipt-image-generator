@@ -1,0 +1,1139 @@
+{
+  "config": {
+    "configFile": "/Users/stevenboutcher/Desktop/receipt-image-generator/playwright.config.ts",
+    "rootDir": "/Users/stevenboutcher/Desktop/receipt-image-generator/test/playwright",
+    "forbidOnly": false,
+    "fullyParallel": true,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 4
+    },
+    "preserveOutput": "always",
+    "reporter": [
+      [
+        "list",
+        {
+          "printSteps": true
+        }
+      ],
+      [
+        "json",
+        {
+          "outputFile": "results.json"
+        }
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "quiet": false,
+    "projects": [
+      {
+        "outputDir": "/Users/stevenboutcher/Desktop/receipt-image-generator/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 4
+        },
+        "id": "api",
+        "name": "api",
+        "testDir": "/Users/stevenboutcher/Desktop/receipt-image-generator/test/playwright",
+        "testIgnore": [],
+        "testMatch": [
+          "/api\\/.*\\.spec\\.ts/"
+        ],
+        "timeout": 30000
+      },
+      {
+        "outputDir": "/Users/stevenboutcher/Desktop/receipt-image-generator/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 4
+        },
+        "id": "chrome",
+        "name": "chrome",
+        "testDir": "/Users/stevenboutcher/Desktop/receipt-image-generator/test/playwright",
+        "testIgnore": [],
+        "testMatch": [
+          "/^(?!.*api\\/).*\\.spec\\.ts$/"
+        ],
+        "timeout": 30000
+      },
+      {
+        "outputDir": "/Users/stevenboutcher/Desktop/receipt-image-generator/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 4
+        },
+        "id": "safari",
+        "name": "safari",
+        "testDir": "/Users/stevenboutcher/Desktop/receipt-image-generator/test/playwright",
+        "testIgnore": [],
+        "testMatch": [
+          "/^(?!.*api\\/).*\\.spec\\.ts$/"
+        ],
+        "timeout": 30000
+      },
+      {
+        "outputDir": "/Users/stevenboutcher/Desktop/receipt-image-generator/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 4
+        },
+        "id": "firefox",
+        "name": "firefox",
+        "testDir": "/Users/stevenboutcher/Desktop/receipt-image-generator/test/playwright",
+        "testIgnore": [],
+        "testMatch": [
+          "/^(?!.*api\\/).*\\.spec\\.ts$/"
+        ],
+        "timeout": 30000
+      }
+    ],
+    "shard": null,
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.55.0",
+    "workers": 4,
+    "webServer": {
+      "command": "npm run start",
+      "port": 3000,
+      "reuseExistingServer": true,
+      "timeout": 120000
+    }
+  },
+  "suites": [
+    {
+      "title": "api/savedReceipts.spec.ts",
+      "file": "api/savedReceipts.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "GET /api/receipts",
+          "file": "api/savedReceipts.spec.ts",
+          "line": 10,
+          "column": 6,
+          "specs": [
+            {
+              "title": "401 without authentication",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "api",
+                  "projectName": "api",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "failed",
+                      "duration": 340,
+                      "error": {
+                        "message": "Error: apiRequestContext.get: connect ECONNREFUSED ::1:8888\nCall log:\n\u001b[2m  - → GET http://localhost:8888/api/receipts\u001b[22m\n\u001b[2m    - user-agent: Playwright API\u001b[22m\n\u001b[2m    - accept: */*\u001b[22m\n\u001b[2m    - accept-encoding: gzip,deflate,br\u001b[22m\n",
+                        "stack": "Error: apiRequestContext.get: connect ECONNREFUSED ::1:8888\nCall log:\n\u001b[2m  - → GET http://localhost:8888/api/receipts\u001b[22m\n\u001b[2m    - user-agent: Playwright API\u001b[22m\n\u001b[2m    - accept: */*\u001b[22m\n\u001b[2m    - accept-encoding: gzip,deflate,br\u001b[22m\n\n    at apiRequestContext.get: connect ECONNREFUSED ::1:8888\n    at /Users/stevenboutcher/Desktop/receipt-image-generator/test/playwright/api/utils/request-handler.ts:126:49\n    at RequestHandler.getRequest (/Users/stevenboutcher/Desktop/receipt-image-generator/test/playwright/api/utils/request-handler.ts:120:20)\n    at /Users/stevenboutcher/Desktop/receipt-image-generator/test/playwright/api/savedReceipts.spec.ts:13:33",
+                        "location": {
+                          "file": "apiRequestContext.get: connect ECONNREFUSED :",
+                          "column": 8888,
+                          "line": 1
+                        }
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "apiRequestContext.get: connect ECONNREFUSED :",
+                            "column": 8888,
+                            "line": 1
+                          },
+                          "message": "Error: apiRequestContext.get: connect ECONNREFUSED ::1:8888\nCall log:\n\u001b[2m  - → GET http://localhost:8888/api/receipts\u001b[22m\n\u001b[2m    - user-agent: Playwright API\u001b[22m\n\u001b[2m    - accept: */*\u001b[22m\n\u001b[2m    - accept-encoding: gzip,deflate,br\u001b[22m\n\n\u001b[2m    at apiRequestContext.get: connect ECONNREFUSED ::1:8888\u001b[22m\n\u001b[2m    at /Users/stevenboutcher/Desktop/receipt-image-generator/test/playwright/api/utils/request-handler.ts:126:49\u001b[22m\n\u001b[2m    at RequestHandler.getRequest (/Users/stevenboutcher/Desktop/receipt-image-generator/test/playwright/api/utils/request-handler.ts:120:20)\u001b[22m\n\u001b[2m    at /Users/stevenboutcher/Desktop/receipt-image-generator/test/playwright/api/savedReceipts.spec.ts:13:33\u001b[22m"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "steps": [
+                        {
+                          "title": "GET request to http://localhost:8888/api/receipts",
+                          "duration": 316,
+                          "error": {
+                            "message": "Error: apiRequestContext.get: connect ECONNREFUSED ::1:8888\nCall log:\n\u001b[2m  - → GET http://localhost:8888/api/receipts\u001b[22m\n\u001b[2m    - user-agent: Playwright API\u001b[22m\n\u001b[2m    - accept: */*\u001b[22m\n\u001b[2m    - accept-encoding: gzip,deflate,br\u001b[22m\n",
+                            "stack": "Error: apiRequestContext.get: connect ECONNREFUSED ::1:8888\nCall log:\n\u001b[2m  - → GET http://localhost:8888/api/receipts\u001b[22m\n\u001b[2m    - user-agent: Playwright API\u001b[22m\n\u001b[2m    - accept: */*\u001b[22m\n\u001b[2m    - accept-encoding: gzip,deflate,br\u001b[22m\n\n    at apiRequestContext.get: connect ECONNREFUSED ::1:8888\n    at /Users/stevenboutcher/Desktop/receipt-image-generator/test/playwright/api/utils/request-handler.ts:126:49\n    at RequestHandler.getRequest (/Users/stevenboutcher/Desktop/receipt-image-generator/test/playwright/api/utils/request-handler.ts:120:20)\n    at /Users/stevenboutcher/Desktop/receipt-image-generator/test/playwright/api/savedReceipts.spec.ts:13:33",
+                            "location": {
+                              "file": "apiRequestContext.get: connect ECONNREFUSED :",
+                              "column": 8888,
+                              "line": 1
+                            }
+                          }
+                        }
+                      ],
+                      "startTime": "2026-01-05T00:02:29.707Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "trace",
+                          "contentType": "application/zip",
+                          "path": "/Users/stevenboutcher/Desktop/receipt-image-generator/test-results/api-savedReceipts-GET-api--2c528--401-without-authentication-api/trace.zip"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "apiRequestContext.get: connect ECONNREFUSED :",
+                        "column": 8888,
+                        "line": 1
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "28bb2224c32224f75a70-731afc2ca7778795bbc2",
+              "file": "api/savedReceipts.spec.ts",
+              "line": 12,
+              "column": 7
+            },
+            {
+              "title": "200 with authentication returns empty array when no receipts",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "api",
+                  "projectName": "api",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 1,
+                      "status": "failed",
+                      "duration": 191,
+                      "error": {
+                        "message": "Error: Failed to create user in DB: TypeError: fetch failed",
+                        "stack": "Error: Failed to create user in DB: TypeError: fetch failed\n    at createUserInDB (/Users/stevenboutcher/Desktop/receipt-image-generator/test/playwright/api/utils/db-setup.ts:54:11)\n    at TestDataManager.createUser (/Users/stevenboutcher/Desktop/receipt-image-generator/test/playwright/api/utils/test-data-manager.ts:28:25)\n    at /Users/stevenboutcher/Desktop/receipt-image-generator/test/playwright/api/savedReceipts.spec.ts:19:5",
+                        "location": {
+                          "file": "/Users/stevenboutcher/Desktop/receipt-image-generator/test/playwright/api/utils/db-setup.ts",
+                          "column": 11,
+                          "line": 54
+                        },
+                        "snippet": "\u001b[90m   at \u001b[39mapi/utils/db-setup.ts:54\n\n\u001b[0m \u001b[90m 52 |\u001b[39m\n \u001b[90m 53 |\u001b[39m   \u001b[36mif\u001b[39m (error \u001b[33m||\u001b[39m \u001b[33m!\u001b[39mdata) {\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 54 |\u001b[39m     \u001b[36mthrow\u001b[39m \u001b[36mnew\u001b[39m \u001b[33mError\u001b[39m(\u001b[32m`Failed to create user in DB: ${error?.message || \"Unknown error\"}`\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m           \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 55 |\u001b[39m   }\n \u001b[90m 56 |\u001b[39m\n \u001b[90m 57 |\u001b[39m   \u001b[36mreturn\u001b[39m {\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "/Users/stevenboutcher/Desktop/receipt-image-generator/test/playwright/api/utils/db-setup.ts",
+                            "column": 11,
+                            "line": 54
+                          },
+                          "message": "Error: Failed to create user in DB: TypeError: fetch failed\n\n\u001b[90m   at \u001b[39mapi/utils/db-setup.ts:54\n\n\u001b[0m \u001b[90m 52 |\u001b[39m\n \u001b[90m 53 |\u001b[39m   \u001b[36mif\u001b[39m (error \u001b[33m||\u001b[39m \u001b[33m!\u001b[39mdata) {\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 54 |\u001b[39m     \u001b[36mthrow\u001b[39m \u001b[36mnew\u001b[39m \u001b[33mError\u001b[39m(\u001b[32m`Failed to create user in DB: ${error?.message || \"Unknown error\"}`\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m           \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 55 |\u001b[39m   }\n \u001b[90m 56 |\u001b[39m\n \u001b[90m 57 |\u001b[39m   \u001b[36mreturn\u001b[39m {\u001b[0m\n\u001b[2m    at createUserInDB (/Users/stevenboutcher/Desktop/receipt-image-generator/test/playwright/api/utils/db-setup.ts:54:11)\u001b[22m\n\u001b[2m    at TestDataManager.createUser (/Users/stevenboutcher/Desktop/receipt-image-generator/test/playwright/api/utils/test-data-manager.ts:28:25)\u001b[22m\n\u001b[2m    at /Users/stevenboutcher/Desktop/receipt-image-generator/test/playwright/api/savedReceipts.spec.ts:19:5\u001b[22m"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-01-05T00:02:29.719Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "trace",
+                          "contentType": "application/zip",
+                          "path": "/Users/stevenboutcher/Desktop/receipt-image-generator/test-results/api-savedReceipts-GET-api--ffcbb-mpty-array-when-no-receipts-api/trace.zip"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "/Users/stevenboutcher/Desktop/receipt-image-generator/test/playwright/api/utils/db-setup.ts",
+                        "column": 11,
+                        "line": 54
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "28bb2224c32224f75a70-276006e3e5d1a0fe88f8",
+              "file": "api/savedReceipts.spec.ts",
+              "line": 16,
+              "column": 7
+            },
+            {
+              "title": "200 returns user's receipts",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "api",
+                  "projectName": "api",
+                  "results": [
+                    {
+                      "workerIndex": 2,
+                      "parallelIndex": 2,
+                      "status": "failed",
+                      "duration": 193,
+                      "error": {
+                        "message": "Error: Failed to create user in DB: TypeError: fetch failed",
+                        "stack": "Error: Failed to create user in DB: TypeError: fetch failed\n    at createUserInDB (/Users/stevenboutcher/Desktop/receipt-image-generator/test/playwright/api/utils/db-setup.ts:54:11)\n    at TestDataManager.createUser (/Users/stevenboutcher/Desktop/receipt-image-generator/test/playwright/api/utils/test-data-manager.ts:28:25)\n    at /Users/stevenboutcher/Desktop/receipt-image-generator/test/playwright/api/savedReceipts.spec.ts:33:18",
+                        "location": {
+                          "file": "/Users/stevenboutcher/Desktop/receipt-image-generator/test/playwright/api/utils/db-setup.ts",
+                          "column": 11,
+                          "line": 54
+                        },
+                        "snippet": "\u001b[90m   at \u001b[39mapi/utils/db-setup.ts:54\n\n\u001b[0m \u001b[90m 52 |\u001b[39m\n \u001b[90m 53 |\u001b[39m   \u001b[36mif\u001b[39m (error \u001b[33m||\u001b[39m \u001b[33m!\u001b[39mdata) {\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 54 |\u001b[39m     \u001b[36mthrow\u001b[39m \u001b[36mnew\u001b[39m \u001b[33mError\u001b[39m(\u001b[32m`Failed to create user in DB: ${error?.message || \"Unknown error\"}`\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m           \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 55 |\u001b[39m   }\n \u001b[90m 56 |\u001b[39m\n \u001b[90m 57 |\u001b[39m   \u001b[36mreturn\u001b[39m {\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "/Users/stevenboutcher/Desktop/receipt-image-generator/test/playwright/api/utils/db-setup.ts",
+                            "column": 11,
+                            "line": 54
+                          },
+                          "message": "Error: Failed to create user in DB: TypeError: fetch failed\n\n\u001b[90m   at \u001b[39mapi/utils/db-setup.ts:54\n\n\u001b[0m \u001b[90m 52 |\u001b[39m\n \u001b[90m 53 |\u001b[39m   \u001b[36mif\u001b[39m (error \u001b[33m||\u001b[39m \u001b[33m!\u001b[39mdata) {\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 54 |\u001b[39m     \u001b[36mthrow\u001b[39m \u001b[36mnew\u001b[39m \u001b[33mError\u001b[39m(\u001b[32m`Failed to create user in DB: ${error?.message || \"Unknown error\"}`\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m           \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 55 |\u001b[39m   }\n \u001b[90m 56 |\u001b[39m\n \u001b[90m 57 |\u001b[39m   \u001b[36mreturn\u001b[39m {\u001b[0m\n\u001b[2m    at createUserInDB (/Users/stevenboutcher/Desktop/receipt-image-generator/test/playwright/api/utils/db-setup.ts:54:11)\u001b[22m\n\u001b[2m    at TestDataManager.createUser (/Users/stevenboutcher/Desktop/receipt-image-generator/test/playwright/api/utils/test-data-manager.ts:28:25)\u001b[22m\n\u001b[2m    at /Users/stevenboutcher/Desktop/receipt-image-generator/test/playwright/api/savedReceipts.spec.ts:33:18\u001b[22m"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-01-05T00:02:29.722Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "trace",
+                          "contentType": "application/zip",
+                          "path": "/Users/stevenboutcher/Desktop/receipt-image-generator/test-results/api-savedReceipts-GET-api--f24f2-200-returns-user-s-receipts-api/trace.zip"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "/Users/stevenboutcher/Desktop/receipt-image-generator/test/playwright/api/utils/db-setup.ts",
+                        "column": 11,
+                        "line": 54
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "28bb2224c32224f75a70-a98cc3cc6791c305b071",
+              "file": "api/savedReceipts.spec.ts",
+              "line": 30,
+              "column": 7
+            },
+            {
+              "title": "filtering by favorite returns only favorited receipts",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "api",
+                  "projectName": "api",
+                  "results": [
+                    {
+                      "workerIndex": 3,
+                      "parallelIndex": 3,
+                      "status": "failed",
+                      "duration": 191,
+                      "error": {
+                        "message": "Error: Failed to create user in DB: TypeError: fetch failed",
+                        "stack": "Error: Failed to create user in DB: TypeError: fetch failed\n    at createUserInDB (/Users/stevenboutcher/Desktop/receipt-image-generator/test/playwright/api/utils/db-setup.ts:54:11)\n    at TestDataManager.createUser (/Users/stevenboutcher/Desktop/receipt-image-generator/test/playwright/api/utils/test-data-manager.ts:28:25)\n    at /Users/stevenboutcher/Desktop/receipt-image-generator/test/playwright/api/savedReceipts.spec.ts:57:18",
+                        "location": {
+                          "file": "/Users/stevenboutcher/Desktop/receipt-image-generator/test/playwright/api/utils/db-setup.ts",
+                          "column": 11,
+                          "line": 54
+                        },
+                        "snippet": "\u001b[90m   at \u001b[39mapi/utils/db-setup.ts:54\n\n\u001b[0m \u001b[90m 52 |\u001b[39m\n \u001b[90m 53 |\u001b[39m   \u001b[36mif\u001b[39m (error \u001b[33m||\u001b[39m \u001b[33m!\u001b[39mdata) {\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 54 |\u001b[39m     \u001b[36mthrow\u001b[39m \u001b[36mnew\u001b[39m \u001b[33mError\u001b[39m(\u001b[32m`Failed to create user in DB: ${error?.message || \"Unknown error\"}`\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m           \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 55 |\u001b[39m   }\n \u001b[90m 56 |\u001b[39m\n \u001b[90m 57 |\u001b[39m   \u001b[36mreturn\u001b[39m {\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "/Users/stevenboutcher/Desktop/receipt-image-generator/test/playwright/api/utils/db-setup.ts",
+                            "column": 11,
+                            "line": 54
+                          },
+                          "message": "Error: Failed to create user in DB: TypeError: fetch failed\n\n\u001b[90m   at \u001b[39mapi/utils/db-setup.ts:54\n\n\u001b[0m \u001b[90m 52 |\u001b[39m\n \u001b[90m 53 |\u001b[39m   \u001b[36mif\u001b[39m (error \u001b[33m||\u001b[39m \u001b[33m!\u001b[39mdata) {\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 54 |\u001b[39m     \u001b[36mthrow\u001b[39m \u001b[36mnew\u001b[39m \u001b[33mError\u001b[39m(\u001b[32m`Failed to create user in DB: ${error?.message || \"Unknown error\"}`\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m           \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 55 |\u001b[39m   }\n \u001b[90m 56 |\u001b[39m\n \u001b[90m 57 |\u001b[39m   \u001b[36mreturn\u001b[39m {\u001b[0m\n\u001b[2m    at createUserInDB (/Users/stevenboutcher/Desktop/receipt-image-generator/test/playwright/api/utils/db-setup.ts:54:11)\u001b[22m\n\u001b[2m    at TestDataManager.createUser (/Users/stevenboutcher/Desktop/receipt-image-generator/test/playwright/api/utils/test-data-manager.ts:28:25)\u001b[22m\n\u001b[2m    at /Users/stevenboutcher/Desktop/receipt-image-generator/test/playwright/api/savedReceipts.spec.ts:57:18\u001b[22m"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-01-05T00:02:29.722Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "trace",
+                          "contentType": "application/zip",
+                          "path": "/Users/stevenboutcher/Desktop/receipt-image-generator/test-results/api-savedReceipts-GET-api--dcf33-rns-only-favorited-receipts-api/trace.zip"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "/Users/stevenboutcher/Desktop/receipt-image-generator/test/playwright/api/utils/db-setup.ts",
+                        "column": 11,
+                        "line": 54
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "28bb2224c32224f75a70-936e83ea0fe03cd93fc0",
+              "file": "api/savedReceipts.spec.ts",
+              "line": 54,
+              "column": 7
+            },
+            {
+              "title": "users cannot access other users' receipts",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "api",
+                  "projectName": "api",
+                  "results": [
+                    {
+                      "workerIndex": 4,
+                      "parallelIndex": 1,
+                      "status": "failed",
+                      "duration": 106,
+                      "error": {
+                        "message": "Error: Failed to create user in DB: TypeError: fetch failed",
+                        "stack": "Error: Failed to create user in DB: TypeError: fetch failed\n    at createUserInDB (/Users/stevenboutcher/Desktop/receipt-image-generator/test/playwright/api/utils/db-setup.ts:54:11)\n    at TestDataManager.createUser (/Users/stevenboutcher/Desktop/receipt-image-generator/test/playwright/api/utils/test-data-manager.ts:28:25)\n    at /Users/stevenboutcher/Desktop/receipt-image-generator/test/playwright/api/savedReceipts.spec.ts:85:19",
+                        "location": {
+                          "file": "/Users/stevenboutcher/Desktop/receipt-image-generator/test/playwright/api/utils/db-setup.ts",
+                          "column": 11,
+                          "line": 54
+                        },
+                        "snippet": "\u001b[90m   at \u001b[39mapi/utils/db-setup.ts:54\n\n\u001b[0m \u001b[90m 52 |\u001b[39m\n \u001b[90m 53 |\u001b[39m   \u001b[36mif\u001b[39m (error \u001b[33m||\u001b[39m \u001b[33m!\u001b[39mdata) {\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 54 |\u001b[39m     \u001b[36mthrow\u001b[39m \u001b[36mnew\u001b[39m \u001b[33mError\u001b[39m(\u001b[32m`Failed to create user in DB: ${error?.message || \"Unknown error\"}`\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m           \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 55 |\u001b[39m   }\n \u001b[90m 56 |\u001b[39m\n \u001b[90m 57 |\u001b[39m   \u001b[36mreturn\u001b[39m {\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "/Users/stevenboutcher/Desktop/receipt-image-generator/test/playwright/api/utils/db-setup.ts",
+                            "column": 11,
+                            "line": 54
+                          },
+                          "message": "Error: Failed to create user in DB: TypeError: fetch failed\n\n\u001b[90m   at \u001b[39mapi/utils/db-setup.ts:54\n\n\u001b[0m \u001b[90m 52 |\u001b[39m\n \u001b[90m 53 |\u001b[39m   \u001b[36mif\u001b[39m (error \u001b[33m||\u001b[39m \u001b[33m!\u001b[39mdata) {\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 54 |\u001b[39m     \u001b[36mthrow\u001b[39m \u001b[36mnew\u001b[39m \u001b[33mError\u001b[39m(\u001b[32m`Failed to create user in DB: ${error?.message || \"Unknown error\"}`\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m           \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 55 |\u001b[39m   }\n \u001b[90m 56 |\u001b[39m\n \u001b[90m 57 |\u001b[39m   \u001b[36mreturn\u001b[39m {\u001b[0m\n\u001b[2m    at createUserInDB (/Users/stevenboutcher/Desktop/receipt-image-generator/test/playwright/api/utils/db-setup.ts:54:11)\u001b[22m\n\u001b[2m    at TestDataManager.createUser (/Users/stevenboutcher/Desktop/receipt-image-generator/test/playwright/api/utils/test-data-manager.ts:28:25)\u001b[22m\n\u001b[2m    at /Users/stevenboutcher/Desktop/receipt-image-generator/test/playwright/api/savedReceipts.spec.ts:85:19\u001b[22m"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-01-05T00:02:30.848Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "trace",
+                          "contentType": "application/zip",
+                          "path": "/Users/stevenboutcher/Desktop/receipt-image-generator/test-results/api-savedReceipts-GET-api--c3034-access-other-users-receipts-api/trace.zip"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "/Users/stevenboutcher/Desktop/receipt-image-generator/test/playwright/api/utils/db-setup.ts",
+                        "column": 11,
+                        "line": 54
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "28bb2224c32224f75a70-cc47b01edf48905042cd",
+              "file": "api/savedReceipts.spec.ts",
+              "line": 82,
+              "column": 7
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "createKwikTripReceipt.spec.ts",
+      "file": "createKwikTripReceipt.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "create a Kwik Trip receipt",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chrome",
+              "projectName": "chrome",
+              "results": [
+                {
+                  "workerIndex": 5,
+                  "parallelIndex": 3,
+                  "status": "passed",
+                  "duration": 2042,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-01-05T00:02:30.287Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "3069f8ce25a52dbe498a-e96b23e1d2b23a3f092f",
+          "file": "createKwikTripReceipt.spec.ts",
+          "line": 3,
+          "column": 5
+        },
+        {
+          "title": "create a Kwik Trip receipt",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "safari",
+              "projectName": "safari",
+              "results": [
+                {
+                  "workerIndex": 9,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 2189,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-01-05T00:02:33.531Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "3069f8ce25a52dbe498a-86597b757d159fd27132",
+          "file": "createKwikTripReceipt.spec.ts",
+          "line": 3,
+          "column": 5
+        },
+        {
+          "title": "create a Kwik Trip receipt",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "firefox",
+              "projectName": "firefox",
+              "results": [
+                {
+                  "workerIndex": 13,
+                  "parallelIndex": 2,
+                  "status": "passed",
+                  "duration": 2986,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-01-05T00:02:36.603Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "3069f8ce25a52dbe498a-234b893308c788e19276",
+          "file": "createKwikTripReceipt.spec.ts",
+          "line": 3,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "title": "formatReceipt.spec.ts",
+      "file": "formatReceipt.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "Format Receipt: blur toggle updates preview",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chrome",
+              "projectName": "chrome",
+              "results": [
+                {
+                  "workerIndex": 6,
+                  "parallelIndex": 2,
+                  "status": "passed",
+                  "duration": 1566,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-01-05T00:02:30.288Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "a6836504107ae1054c52-9000d3d54a352464c212",
+          "file": "formatReceipt.spec.ts",
+          "line": 8,
+          "column": 5
+        },
+        {
+          "title": "Format Receipt: $ visibility toggle affects totals",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chrome",
+              "projectName": "chrome",
+              "results": [
+                {
+                  "workerIndex": 7,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1593,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-01-05T00:02:30.403Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "a6836504107ae1054c52-394f85a02176c19a829e",
+          "file": "formatReceipt.spec.ts",
+          "line": 21,
+          "column": 5
+        },
+        {
+          "title": "Format Receipt: currency toggle switches formatting between USD and CAD",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chrome",
+              "projectName": "chrome",
+              "results": [
+                {
+                  "workerIndex": 8,
+                  "parallelIndex": 1,
+                  "status": "passed",
+                  "duration": 1208,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-01-05T00:02:31.768Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "a6836504107ae1054c52-b2e124a6f7dc1f4c0c52",
+          "file": "formatReceipt.spec.ts",
+          "line": 46,
+          "column": 5
+        },
+        {
+          "title": "Format Receipt: visibility checkboxes hide/show receipt elements",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chrome",
+              "projectName": "chrome",
+              "results": [
+                {
+                  "workerIndex": 6,
+                  "parallelIndex": 2,
+                  "status": "passed",
+                  "duration": 1057,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-01-05T00:02:32.883Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "a6836504107ae1054c52-afbbf31a8847b4e7a67f",
+          "file": "formatReceipt.spec.ts",
+          "line": 64,
+          "column": 5
+        },
+        {
+          "title": "Format Receipt: blur toggle updates preview",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "safari",
+              "projectName": "safari",
+              "results": [
+                {
+                  "workerIndex": 10,
+                  "parallelIndex": 1,
+                  "status": "passed",
+                  "duration": 1980,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-01-05T00:02:33.784Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "a6836504107ae1054c52-0f9b4f64dce88163736a",
+          "file": "formatReceipt.spec.ts",
+          "line": 8,
+          "column": 5
+        },
+        {
+          "title": "Format Receipt: $ visibility toggle affects totals",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "safari",
+              "projectName": "safari",
+              "results": [
+                {
+                  "workerIndex": 11,
+                  "parallelIndex": 3,
+                  "status": "passed",
+                  "duration": 1700,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-01-05T00:02:33.871Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "a6836504107ae1054c52-bd5fdc9ea1c4fd47a5fa",
+          "file": "formatReceipt.spec.ts",
+          "line": 21,
+          "column": 5
+        },
+        {
+          "title": "Format Receipt: currency toggle switches formatting between USD and CAD",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "safari",
+              "projectName": "safari",
+              "results": [
+                {
+                  "workerIndex": 12,
+                  "parallelIndex": 2,
+                  "status": "passed",
+                  "duration": 1325,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-01-05T00:02:34.453Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "a6836504107ae1054c52-b30ee26eb12d10c3ac6d",
+          "file": "formatReceipt.spec.ts",
+          "line": 46,
+          "column": 5
+        },
+        {
+          "title": "Format Receipt: visibility checkboxes hide/show receipt elements",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "safari",
+              "projectName": "safari",
+              "results": [
+                {
+                  "workerIndex": 11,
+                  "parallelIndex": 3,
+                  "status": "passed",
+                  "duration": 861,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-01-05T00:02:35.975Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "a6836504107ae1054c52-b7bebfbd4aca2e1fa767",
+          "file": "formatReceipt.spec.ts",
+          "line": 64,
+          "column": 5
+        },
+        {
+          "title": "Format Receipt: blur toggle updates preview",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "firefox",
+              "projectName": "firefox",
+              "results": [
+                {
+                  "workerIndex": 14,
+                  "parallelIndex": 1,
+                  "status": "passed",
+                  "duration": 2213,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-01-05T00:02:36.742Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "a6836504107ae1054c52-276e01683f27851a1ef4",
+          "file": "formatReceipt.spec.ts",
+          "line": 8,
+          "column": 5
+        },
+        {
+          "title": "Format Receipt: $ visibility toggle affects totals",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "firefox",
+              "projectName": "firefox",
+              "results": [
+                {
+                  "workerIndex": 15,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 2700,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-01-05T00:02:36.906Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "a6836504107ae1054c52-aa7e7adefe616487e69d",
+          "file": "formatReceipt.spec.ts",
+          "line": 21,
+          "column": 5
+        },
+        {
+          "title": "Format Receipt: currency toggle switches formatting between USD and CAD",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "firefox",
+              "projectName": "firefox",
+              "results": [
+                {
+                  "workerIndex": 16,
+                  "parallelIndex": 3,
+                  "status": "passed",
+                  "duration": 2733,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-01-05T00:02:37.279Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "a6836504107ae1054c52-a4422f1c0d6169116279",
+          "file": "formatReceipt.spec.ts",
+          "line": 46,
+          "column": 5
+        },
+        {
+          "title": "Format Receipt: visibility checkboxes hide/show receipt elements",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "firefox",
+              "projectName": "firefox",
+              "results": [
+                {
+                  "workerIndex": 14,
+                  "parallelIndex": 1,
+                  "status": "passed",
+                  "duration": 1715,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-01-05T00:02:40.094Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "a6836504107ae1054c52-69e4c2d841db42876cab",
+          "file": "formatReceipt.spec.ts",
+          "line": 64,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "title": "stagehand/createWalgreensReceipt.spec.ts",
+      "file": "stagehand/createWalgreensReceipt.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "create a Walgreens receipt",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [
+                {
+                  "type": "skip",
+                  "location": {
+                    "file": "/Users/stevenboutcher/Desktop/receipt-image-generator/test/playwright/stagehand/createWalgreensReceipt.spec.ts",
+                    "line": 6,
+                    "column": 6
+                  }
+                }
+              ],
+              "expectedStatus": "skipped",
+              "projectId": "chrome",
+              "projectName": "chrome",
+              "results": [
+                {
+                  "workerIndex": -1,
+                  "parallelIndex": -1,
+                  "status": "skipped",
+                  "duration": 0,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-01-05T00:02:32.905Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "skipped"
+            }
+          ],
+          "id": "d3b847b834b7692cd4b8-67d23531fe8ae149c2e2",
+          "file": "stagehand/createWalgreensReceipt.spec.ts",
+          "line": 6,
+          "column": 6
+        },
+        {
+          "title": "create a Walgreens receipt",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [
+                {
+                  "type": "skip",
+                  "location": {
+                    "file": "/Users/stevenboutcher/Desktop/receipt-image-generator/test/playwright/stagehand/createWalgreensReceipt.spec.ts",
+                    "line": 6,
+                    "column": 6
+                  }
+                }
+              ],
+              "expectedStatus": "skipped",
+              "projectId": "safari",
+              "projectName": "safari",
+              "results": [
+                {
+                  "workerIndex": -1,
+                  "parallelIndex": -1,
+                  "status": "skipped",
+                  "duration": 0,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-01-05T00:02:36.030Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "skipped"
+            }
+          ],
+          "id": "d3b847b834b7692cd4b8-772f9ee4aa67531aab4e",
+          "file": "stagehand/createWalgreensReceipt.spec.ts",
+          "line": 6,
+          "column": 6
+        },
+        {
+          "title": "create a Walgreens receipt",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [
+                {
+                  "type": "skip",
+                  "location": {
+                    "file": "/Users/stevenboutcher/Desktop/receipt-image-generator/test/playwright/stagehand/createWalgreensReceipt.spec.ts",
+                    "line": 6,
+                    "column": 6
+                  }
+                }
+              ],
+              "expectedStatus": "skipped",
+              "projectId": "firefox",
+              "projectName": "firefox",
+              "results": [
+                {
+                  "workerIndex": -1,
+                  "parallelIndex": -1,
+                  "status": "skipped",
+                  "duration": 0,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-01-05T00:02:41.216Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "skipped"
+            }
+          ],
+          "id": "d3b847b834b7692cd4b8-a36990191f0847b725dc",
+          "file": "stagehand/createWalgreensReceipt.spec.ts",
+          "line": 6,
+          "column": 6
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-01-05T00:02:25.423Z",
+    "duration": 17011.928,
+    "expected": 15,
+    "skipped": 3,
+    "unexpected": 5,
+    "flaky": 0
+  }
+}
