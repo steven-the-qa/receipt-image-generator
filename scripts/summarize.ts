@@ -46,3 +46,20 @@ function summarizeResults(results: any): TestSummary {
 }
 
 console.log(summarizeResults(testResults));
+// Running this locally:
+// `tsx scripts/summarize.ts`
+
+// Example Output:
+/*
+{
+    averageDuration: 1720.92,
+    slowestTest: {
+        name: 'Format Receipt: currency toggle switches formatting between USD and CAD',
+        duration: 2733
+    },
+    fastestTest: {
+        name: 'Format Receipt: visibility checkboxes hide/show receipt elements',
+        duration: 861
+    }
+}
+*/
