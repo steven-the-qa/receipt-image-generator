@@ -4,8 +4,6 @@ Web tool that generates fake receipt images. Primary use case is testing apps th
 
 ![project preview](https://www.stevenqa.com/project-1.png)
 
-![playwright slack reporter](https://www.stevenqa.com/slack-reporter.png)
-
 ## Overview
 
 Receipt Image Generator is a flexible, browser-based utility for creating realistic receipt images with customizable content, formatting, and visual characteristics. Whether you're developing OCR software, testing receipt scanning functionality, or need sample receipts for demos, this tool eliminates the need to create physical receipts for testing purposes.
