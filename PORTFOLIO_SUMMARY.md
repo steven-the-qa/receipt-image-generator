@@ -42,6 +42,8 @@ This tool eliminates all of that by generating realistic receipt images programm
 
 ### Key Features
 
+![Saved receipts](/saved-receipts.png)
+
 - **Custom Receipt Creation**: Generate receipts with customizable store names, dates, items, prices, and totals
 - **Granular Data Management**: Configure the receipt to have exacly the purchased items and metadata you want for your test
 - **Visual Effects**: Add realistic imperfections like blurring and missing information (e.g., store name, purchase date) to simulate camera-captured receipts
@@ -52,7 +54,7 @@ This tool eliminates all of that by generating realistic receipt images programm
 
 ### Inspiration - The Original Use Case
 
-At Fetch Rewards (now called Fetch), I developed a similar tool for the QA team to help us test the Fetch app. Fetch is a shopping rewards app that gives users points for uploading receipts, with bonus points for certain products owned by the CPGs Fetch partners with.
+At Fetch Rewards (now called [Fetch](https://fetch.com/)), I developed a similar tool for the QA team to help us test the Fetch app. Fetch is a shopping rewards app that gives users points for uploading receipts, with bonus points for certain products owned by the CPGs Fetch partners with.
 
 In order to ensure the app handled the receipt data appropriately, we would need to test a variety of store name/store address/total price/purchase date scenarios, including receipts from different verticals, regions, countries, etc. We'd need to check that items worth bonus points received those extra points, and that we didn't see users getting more or less points than they earned. We'd also need to test how the app handled users who captured blurry images.
 
@@ -158,6 +160,8 @@ await sh.act("Set item description to 'Toothpaste'");
 ```
 
 ### Custom Slack Test Reporter
+
+![Playwright Slack reporter](/slack-reporter.png)
 
 **Enterprise-Grade Reporting:**
 Built custom Playwright reporter with Redis-backed state management.
