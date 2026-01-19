@@ -1,0 +1,11 @@
+-- Challenge 4: DELETE - Cleanup Orphaned Data
+-- 
+-- Scenario: Remove orphaned sessions and receipts. Requirements:
+-- - Delete all sessions where the user no longer exists
+-- - Delete all receipts where the user no longer exists
+-- - Use nested SELECT with NOT EXISTS or NOT IN to find orphaned records
+-- - Only delete records older than 30 days
+-- - Return counts of deleted records
+-- 
+-- Constraints: Two DELETE statements (sessions first, then receipts). 
+-- Use subqueries to identify orphaned records. Handle foreign key relationships.

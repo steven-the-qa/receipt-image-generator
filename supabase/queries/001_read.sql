@@ -1,0 +1,16 @@
+-- Challenge 2: READ - Data Analysis Query
+-- 
+-- Scenario: Build a report showing user activity. Return:
+-- - User email and username
+-- - Total receipts per user
+-- - Average receipt total per user
+-- - Most recent receipt date per user
+-- - Store name that appears most often per user
+-- - Only users with 5+ receipts
+-- 
+-- Requirements: 
+-- - Use JOINs to connect users and receipts
+-- - Use GROUP BY for aggregations
+-- - Use nested SELECT for the most common store name
+-- - ORDER BY total receipts descending
+-- - LIMIT to top 10 users

@@ -1,0 +1,10 @@
+-- Challenge 3: UPDATE - Bulk Data Fix
+-- 
+-- Scenario: Fix receipts where the total doesn't match (subtotal + tax). Requirements:
+-- - Find all receipts where ABS(total - (subtotal + tax)) > 0.01
+-- - Update total to equal subtotal + tax (rounded to 2 decimals)
+-- - Update updated_at to current timestamp
+-- - Only update receipts from users created in the last 6 months
+-- - Use a nested SELECT in the WHERE clause to identify affected receipts
+-- 
+-- Constraints: Single UPDATE statement. Use a subquery in WHERE to filter users.
