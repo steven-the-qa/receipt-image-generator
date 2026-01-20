@@ -1,3 +1,5 @@
+-- SQL PRACTICE (for my project portfolio)
+--
 -- Challenge 4: DELETE - Cleanup Orphaned Data
 -- 
 -- Scenario: Remove orphaned sessions and receipts. Requirements:

@@ -1,3 +1,5 @@
+-- SQL PRACTICE (for my project portfolio)
+--
 -- Challenge 3: UPDATE - Bulk Data Fix
 -- 
 -- Scenario: Fix receipts where the total doesn't match (subtotal + tax). Requirements:
