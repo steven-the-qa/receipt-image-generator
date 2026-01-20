@@ -1,20 +1,31 @@
--- SQL PRACTICE (for my project portfolio)
+-- Creates 50 test receipts for a specified user using a single INSERT statement.
 --
--- Challenge 1: CREATE - Test Data Setup
--- 
--- Scenario: Create 50 test receipts for a user.
+-- This query generates test data with the following characteristics:
+-- - Rotates evenly through store names: "walgreens", "kwiktrip", "target" (must match retailerInfo.json keys)
+-- - Generates random totals between $15.00 and $150.00
+-- - Spreads purchase dates randomly over the last 3 months
+-- - Marks at least 20% of receipts as favorites
+-- - Uses a subquery to fetch the user_id from the users table
+-- - Ensures the user exists before inserting via a WHERE EXISTS clause
+-- - Calculates subtotal and tax so they sum to total (using a shared tax_rate)
 --
--- Requirements:
--- - Use a single INSERT with a subquery to get the user_id
--- - Store names: "walgreens", "kwiktrip", "target" (rotate evenly, must match retailerInfo.json keys)
--- - Totals between $15.00 and $150.00
--- - Purchase dates spread over the last 3 months
--- - At least 20% marked as favorites
--- - Use nested SELECT to ensure the user exists before inserting
--- 
--- Constraints: One INSERT statement. No loops or functions.
+-- Implementation details:
+-- - Uses generate_series to create 50 rows
+-- - Calculates tax_rate once per row and reuses it for both subtotal and tax calculations
+-- - Extracts date and time components from a generated timestamp
+-- - Sets receipt_items to an empty JSON array
 
-INSERT INTO receipts (store_name, user_id, total, purchase_date, purchase_time, receipt_items, subtotal, tax, is_favorite)
+INSERT INTO receipts (
+    store_name,
+    user_id,
+    total,
+    purchase_date,
+    purchase_time,
+    receipt_items,
+    subtotal,
+    tax,
+    is_favorite
+)
 SELECT
     (ARRAY['walgreens', 'kwiktrip', 'target'])[(row_num % 3) + 1],
     (SELECT id FROM users WHERE email = 'boutchersj@gmail.com' LIMIT 1),
